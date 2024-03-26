@@ -1,16 +1,20 @@
 {
   "name": "my-electron-app",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "My electron app",
+  "author": "Caleb Kish",
+  "license": "ISC",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "electron-builder install-app-deps",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist-windows": "electron-builder --windows",
+    "dist-linux": "electron-builder --linux"
   },
-  "author": "Caleb Kish",
-  "license": "ISC",
   "devDependencies": {
-    "@electron-forge/cli": "^7.3.1",
-    "electron": "^29.1.5"
+    "electron": "^29.1.5",
+    "electron-builder": "^24.13.3"
   }
 }

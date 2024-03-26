@@ -11,6 +11,8 @@
 
 // TLDR: Add privledged features to the renderer context.
 
+// The `require()` function is just a polyfill.
+
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('versions', {
