@@ -9,11 +9,13 @@
     "start": "electron .",
     "postinstall": "electron-builder install-app-deps",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "dist-windows": "electron-builder --windows",
-    "dist-linux": "electron-builder --linux"
+    "dist": "electron-builder --win --linux",
+    "dist:windows": "electron-builder --windows",
+    "dist:linux": "electron-builder --linux",
+    "electron-publish": "electron-builder --publish=always --windows --linux"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
     "electron": "^29.1.5",
     "electron-builder": "^24.13.3"
   }
