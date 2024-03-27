@@ -1,7 +1,13 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const log = require('electron-log');
+const { autoUpdater } = require('electron-updater');
 
-const isDevelopment = process.env['NODE_ENV'];
+const isDevelopment = process.env['NODE_ENV'] === 'development';
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+log.info('App starting...');
 
 const createWindow = () => {
   const win = new BrowserWindow({
@@ -22,6 +28,7 @@ const createWindow = () => {
 }
 
 app.whenReady().then(() => {
+  autoUpdater.checkForUpdatesAndNotify();
 
   ipcMain.handle('ping', () => {
     return 'pong';

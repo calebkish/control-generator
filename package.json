@@ -1,22 +1,29 @@
 {
   "name": "my-electron-app",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "My electron app",
   "author": "Caleb Kish",
   "license": "ISC",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "electron-builder": "electron-builder",
     "postinstall": "electron-builder install-app-deps",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --win --linux",
+    "start": "electron .",
+    "build-unpacked": "electron-builder --dir",
+    "dist": "electron-builder --windows --linux",
     "dist:windows": "electron-builder --windows",
     "dist:linux": "electron-builder --linux",
-    "electron-publish": "electron-builder --publish=always --windows --linux"
+    "publish": "electron-builder --publish=always --windows --linux",
+    "publish:dev": "cross-env READ_DOTENV=1 electron-builder --publish=always --windows --linux"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "electron": "^29.1.5",
     "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "electron-log": "^5.1.2",
+    "electron-updater": "^6.1.8"
   }
 }
