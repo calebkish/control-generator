@@ -23,7 +23,9 @@
     "electron-builder": "^24.13.3"
   },
   "dependencies": {
+    "@langchain/community": "^0.0.43",
     "electron-log": "^5.1.2",
-    "electron-updater": "^6.1.8"
+    "electron-updater": "^6.1.8",
+    "node-llama-cpp": "^2.8.9"
   }
 }
