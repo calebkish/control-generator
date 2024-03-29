@@ -11,6 +11,9 @@ const ghToken = process.env['GH_TOKEN'];
 const config = {
   appId: 'com.something-cool.electron',
   productName: 'something-cool',
+  files: [
+    "src/**/*"
+  ],
   publish: [
     {
       provider: 'github',

@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1711260922895,
+      "tag": "0000_dapper_shiver_man",
+      "breakpoints": true
+    }
+  ]
+}

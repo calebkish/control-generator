@@ -1,0 +1,62 @@
+@use '@angular/material-experimental' as matx;
+@use '@angular/material' as mat;
+
+@import '@angular/cdk/overlay-prebuilt.css';
+
+$theme: matx.define-theme((
+  color: (
+    theme-type: light,
+    primary: matx.$m3-violet-palette,
+  )
+));
+@include mat.core();
+
+// $control-generator-primary: mat.define-palette(mat.$indigo-palette);
+// $control-generator-accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+// $control-generator-warn: mat.define-palette(mat.$red-palette);
+// $control-generator-theme: mat.define-light-theme((
+//   color: (
+//     primary: $control-generator-primary,
+//     accent: $control-generator-accent,
+//     warn: $control-generator-warn,
+//   ),
+//   typography: mat.define-typography-config(),
+//   density: 0
+// ));
+// @include mat.all-component-themes($control-generator-theme);
+
+html {
+  @include mat.all-component-themes($theme);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(assets/material-icons.woff2) format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -moz-font-feature-settings: 'liga';
+  -moz-osx-font-smoothing: grayscale;
+}
