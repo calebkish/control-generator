@@ -1,11 +1,7 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
-import { environment } from '../../environment/environment';
-import { injectQuery } from '@tanstack/angular-query-experimental';
-import { lastValueFrom } from 'rxjs';
-import { JsonPipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-controls-page',
@@ -15,27 +11,17 @@ import { MatButtonModule } from '@angular/material/button';
     RouterOutlet,
     MatButtonModule,
     RouterLink,
+    MatIconModule,
   ],
   template: `
-    <div>In controls page</div>
-    <a mat-button routerLink='form'>Form</a>
-    <router-outlet />
-    <!-- @if (query.data(); as data) {
-      {{ data | json }}
-    } -->
+    <h1 class="mat-headline-large">Controls</h1>
+    <a mat-button routerLink='form'>
+      <mat-icon>add</mat-icon>
+      Create a control
+    </a>
   `,
-  styles: ``,
 })
 export class ControlsPageComponent {
-  // httpClient = inject(HttpClient);
-
-  // url = environment.apiUrl;
-
-  // query = injectQuery(() => ({
-  //   queryKey: ['repoData'],
-  //   queryFn: () => lastValueFrom(this.httpClient.get<Response>(`${this.url}/controls`)),
-  // }));
-
   constructor() {
     // this.httpClient.get(`${this.url}/controls`).subscribe(console.log);
   }

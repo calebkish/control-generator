@@ -11,9 +11,14 @@ const ghToken = process.env['GH_TOKEN'];
 const config = {
   appId: 'com.something-cool.electron',
   productName: 'something-cool',
+
+  // on build, specify the files that should be bundled into the `app.asar`
   files: [
-    "src/**/*"
+    "tsc-out/**/*",
+    "drizzle/**/*",
+    "src/preload.js",
   ],
+
   publish: [
     {
       provider: 'github',

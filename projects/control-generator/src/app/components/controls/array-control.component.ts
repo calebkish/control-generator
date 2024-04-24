@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { FormArray, FormControl, NonNullableFormBuilder } from '@angular/forms';
+import { FormArray, FormControl, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,6 +17,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatIconModule,
     MatSelectModule,
     MatButtonModule,
+    ReactiveFormsModule,
   ],
   template: `
   <div class="border-2 border-gray-200 p-3 rounded-md flex flex-col">
@@ -24,9 +25,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
     <div class="flex flex-col gap-3">
       @for (control of arrayControls(); track control; let idx = $index) {
-        <div class="flex gap-2 mb-3">
-          <mat-form-field subscriptSizing="dynamic">
-            <input matInput />
+        <div class="flex gap-2 mb-3 items-center">
+          <mat-form-field subscriptSizing="dynamic" class="w-full">
+            <!-- <input matInput [formControl]="control" /> -->
+            <textarea matInput [formControl]="control"></textarea>
           </mat-form-field>
           <button type="button" mat-icon-button (click)="controlArrayRemove$.next(idx)">
             <mat-icon>delete</mat-icon>

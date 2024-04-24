@@ -7,3 +7,9 @@ https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/blob/main/mistral-
 
 - on main.js change, restart the desktop app.
 - on renderer change, refresh the browser in the app.
+
+- `app.getAppPath()`
+  - When built: `/home/caleb/electron/my-electron-app/projects/desktop/dist/linux-unpacked/resources/app.asar`
+  - When running `electron .`: `/home/caleb/electron/my-electron-app/projects/desktop`
+
+- extract .asar: `npx @electron/asar extract app.asar <destfolder>`

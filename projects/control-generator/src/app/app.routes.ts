@@ -6,12 +6,10 @@ export const routes: Routes = [
   {
     path: 'controls',
     component: ControlsPageComponent,
-    children: [
-      {
-        path: 'form',
-        component: ControlFormComponent,
-      },
-    ],
+  },
+  {
+    path: 'controls/form',
+    component: ControlFormComponent,
   },
   // {
   //   path: '**',

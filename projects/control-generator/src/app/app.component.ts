@@ -1,10 +1,13 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { AngularQueryDevtools } from '@tanstack/angular-query-devtools-experimental';
 import { environment } from '../environment/environment';
-import { defer } from 'rxjs';
+import { Observable, ReadableStreamLike, Subject, defer, from, scan, switchMap, takeUntil, tap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TextStreamService } from './services/text-stream.service';
 
 declare global {
   interface Window {
@@ -32,9 +35,6 @@ declare global {
   </div>
   <div class="p-3 w-full h-full overflow-auto">
     <router-outlet />
-    <div>
-      <!-- {{ text$ | async }} -->
-    </div>
   </div>
 </div>
 @if (isDev) {
@@ -44,18 +44,40 @@ declare global {
 })
 export class AppComponent {
   isDev = environment.stage === 'development';
+  textStreamService = inject(TextStreamService);
 
-  // text$ = defer(() => window.ipc.invoke('ping'));
+  // generateSuggestion$ = new Subject<void>();
+  // cancel$ = new Subject<void>();
 
-  async ngOnInit() {
+  // text$ = this.generateSuggestion$.pipe(
+  //   switchMap(() => {
+  //     return this.textStreamService.requestTextStream$('http://localhost:4200/api/llm')
+  //       .pipe(
+  //         scan<string, string>((acc, value) => acc + value, ''),
+  //         takeUntil(this.cancel$),
+  //       );
+  //   }),
+  // );
+  // text = toSignal(this.text$, { initialValue: '' });
 
-    // console.log('ngOnInit1');
-    const reader: ReadableStreamDefaultReader = await window.ipc.invoke('ping');
-    const lol = await reader.read();
-    console.log(lol);
-    // console.log(reader);
-    // console.log('ngOnInit2');
-    // console.log(stream);
-    // console.log('ngOnInit3');
-  }
 }
+
+/*
+attribute generation:
+
+# if no attributes exist:
+- ask user to select an example control.
+
+- user pastes in each attribute as they would like into chat input.
+
+- select an example control.
+  - example control presumably "finished" and has all its attributes?
+
+-
+
+- llm will be fed:
+  - control form
+  - control description
+  - example control
+  - user attribute recommendations
+*/
