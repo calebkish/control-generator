@@ -1,7 +1,7 @@
 import { Component, Signal, TemplateRef, computed, contentChild, input } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { formControlError } from '../../util/control-error';
+import { getFormControlError } from '../../util/control-error';
 import { CommonModule } from '@angular/common';
 
 
@@ -38,9 +38,9 @@ control, even tho one is provided through the template.
     @if (hint()) {
       <mat-hint>{{ hint() }}</mat-hint>
     }
-    @if (error()) {
+    <!-- @if (error()) {
       <mat-error>{{ error() }}</mat-error>
-    }
+    } -->
   </mat-form-field>
 }
   `
@@ -52,7 +52,7 @@ export class FormFieldComponent {
   ctrl = input.required<FormControl<any>>();
   disabled = input<boolean>(false);
   hint = input<string | null>(null);
-  error = formControlError(this.ctrl);
+  // error = formControlError(this.ctrl);
 
   context: Signal<FormFieldContext> = computed(() => {
     const ctrl = this.ctrl();

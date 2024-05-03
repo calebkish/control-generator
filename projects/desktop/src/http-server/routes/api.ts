@@ -51,7 +51,8 @@ apiRouter.post('/controls',
   },
 );
 
-const llamaPath = path.join(userDataDir, 'mistral-7b-instruct-v0.2.Q4_K_M.gguf');
+// const llamaPath = path.join(userDataDir, 'mistral-7b-instruct-v0.2.Q4_K_M.gguf');
+const llamaPath = path.join(userDataDir, 'Meta-Llama-3-8B-Instruct.Q8_0.gguf');
 
 const llmValidator = z.object({
   prompt: z.string(),

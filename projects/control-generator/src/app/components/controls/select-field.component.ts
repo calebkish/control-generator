@@ -1,8 +1,7 @@
 import { Component, input } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { formControlError } from '../../util/control-error';
-import { MatInputModule } from '@angular/material/input';
+import { getFormControlError } from '../../util/control-error';
 import { MatSelectModule } from '@angular/material/select';
 
 export type SelectOption<T> = {
@@ -19,9 +18,9 @@ export type SelectOption<T> = {
     MatSelectModule,
   ],
   template: `
-<mat-form-field subscriptSizing="dynamic">
+<mat-form-field subscriptSizing="dynamic" class="w-full">
   <mat-label>{{ label() }}</mat-label>
-  <mat-select [formControl]="ctrl()">
+  <mat-select [formControl]="ctrl()" [disabled]="disabled()">
     @for (option of options(); track option.value) {
       <mat-option [value]="option.value">{{ option.label }}</mat-option>
     }
@@ -29,9 +28,9 @@ export type SelectOption<T> = {
   @if (hint()) {
     <mat-hint>{{ hint() }}</mat-hint>
   }
-  @if (error()) {
+  <!-- @if (error()) {
     <mat-error>{{ error() }}</mat-error>
-  }
+  } -->
 </mat-form-field>
   `
 })
@@ -41,5 +40,5 @@ export class SelectFieldComponent<T> {
   options = input.required<SelectOption<T>[]>();
   disabled = input<boolean>(false);
   hint = input<string | null>(null);
-  error = formControlError(this.ctrl);
+  // error = formControlError(this.ctrl);
 }

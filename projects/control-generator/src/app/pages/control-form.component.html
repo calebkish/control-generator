@@ -1,15 +1,20 @@
 <div class="flex flex-col gap-4 w-full">
-  <h1 class="mat-headline-large">Create a control</h1>
+  <div class="text-2xl">Create a control</div>
+
+  <app-text-field
+    label="Control Name"
+    [ctrl]="form.controls.name"
+  />
+
+  <app-text-field
+    label="General Process Category"
+    [ctrl]="form.controls.gpc"
+  />
 
   <app-select-field
     label="Control Type"
     [ctrl]="form.controls.controlType"
     [options]="controlTypeOptions"
-  />
-
-  <app-array-control
-    label="IPE"
-    [arrayCtrl]="form.controls.ipe"
   />
 
   <app-select-field
@@ -18,28 +23,42 @@
     [options]="frequencyOptions"
   />
 
-  <app-array-control
-    label="Judgements"
-    [arrayCtrl]="form.controls.judgements"
+  <app-textarea-field
+    label="Objective"
+    [ctrl]="form.controls.objective"
   />
 
-  <app-array-control
+  <app-textarea-field
+    label="IPE"
+    [ctrl]="form.controls.ipe"
+    hint="Information used in the Performance of the Control. Leave empty if not applicable."
+  />
+
+  <app-textarea-field
+    label="Judgement/Complexity Involved"
+    [ctrl]="form.controls.judgementComplexityInvolved"
+    hint="Leave empty if not applicable."
+  />
+
+  <app-textarea-field
     label="Quantitative Thresholds"
-    [arrayCtrl]="form.controls.quantitativeThresholds"
+    [ctrl]="form.controls.quantitativeThresholds"
+    hint="Leave empty if not applicable."
   />
 
-  <app-array-control
+  <app-textarea-field
     label="Qualitative Thresholds"
-    [arrayCtrl]="form.controls.qualitativeThresholds"
+    [ctrl]="form.controls.qualitativeThresholds"
+    hint="Leave empty if not applicable."
   />
 
   <app-textarea-field
     label="Investigation and Resolution Process"
     [ctrl]="form.controls.investigationProcess"
-    hint="Describe the investigation and resolution process"
+    hint="Leave empty if not applicable."
   />
 
-  <div class="border-2 p-3 rounded-md flex gap-2">
+  <!-- <div class="border-2 p-3 rounded-md flex gap-2">
     <app-textarea-field
       label="Control description"
       hint="Please provide a detailed description of all activity occuring to achieve the objective of this control"
@@ -57,10 +76,10 @@
     </div>
   </div>
 
-  <app-array-control
+  <app-array-field
     label="Control Attributes"
     [arrayCtrl]="form.controls.qualitativeThresholds"
-  />
+  /> -->
 
   <button mat-flat-button type="button" (click)="onSubmit$.next()">
     Submit

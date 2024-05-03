@@ -1,32 +1,23 @@
-import { Signal, computed } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
-export function formControlError(control: Signal<FormControl>): Signal<string | null> {
-  return computed(() => {
-    const ctrl = control();
+export function getFormControlError(ctrl: FormControl): string | null {
+  const errors = ctrl.errors;
 
-    if (!ctrl.touched) {
-      return null;
-    }
+  if (!errors) {
+    return null;
+  }
 
-    const errors = ctrl.errors;
+  const [validatorType, validatorError] = Object.entries(errors)[0];
 
-    if (!errors) {
-      return null;
-    }
+  if (validatorType === 'required') {
+    return 'Required';
+  } else if (validatorType === 'minlength') {
+    return `Minimum of ${validatorError.requiredLength} required`;
+  }
 
-    const [validatorType, validatorError]= Object.entries(errors)[0];
+  if (typeof validatorError === 'string') {
+    return validatorError;
+  }
 
-    if (validatorType === 'required') {
-      return 'Required';
-    } else if (validatorType === 'minlength') {
-      return `Minimum of ${validatorError.requiredLength} required`;
-    }
-
-    if (typeof validatorError === 'string') {
-      return validatorError;
-    }
-
-    throw new Error(`Could not find a corresponding message for the validation error "${validatorType}"`);
-  });
+  throw new Error(`Could not find a corresponding message for the validation error "${validatorType}"`);
 }

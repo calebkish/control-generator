@@ -7,7 +7,7 @@ import {MatSelectModule} from '@angular/material/select';
 import { EMPTY, Subject, scan, shareReplay, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
-import { ArrayControlComponent } from "../components/controls/array-control.component";
+import { ArrayFieldComponent } from "../components/controls/array-field.component";
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'
 import { TextFieldComponent } from '../components/controls/text-field.component';
@@ -26,7 +26,7 @@ import { AsyncPipe } from '@angular/common';
         MatIconModule,
         MatSelectModule,
         MatButtonModule,
-        ArrayControlComponent,
+        ArrayFieldComponent,
         ReactiveFormsModule,
         MatTooltipModule,
         MatSnackBarModule,
@@ -42,14 +42,20 @@ export class FormComponent {
   textStreamService = inject(TextStreamService);
 
   form = this.fb.group({
+    name: this.fb.control<string | null>(null, [Validators.required]),
+    gpc: this.fb.control<string | null>(null, [Validators.required]),
+    objective: this.fb.control<string | null>(null, [Validators.required]),
     controlType: this.fb.control<string | null>(null, [Validators.required]),
-    ipe: this.fb.array<string | null>([]),
     frequency: this.fb.control<string | null>(null, [Validators.required]),
-    judgements: this.fb.array<string | null>([]),
-    quantitativeThresholds: this.fb.array<string | null>([]),
-    qualitativeThresholds: this.fb.array<string | null>([]),
-    investigationProcess: this.fb.control<string | null>(null),
+    ipe: this.fb.control<string | null>(null), // yes/no
+    judgements: this.fb.control<string | null>(null), // yes/no
+    judgementComplexityInvolved: this.fb.control<string | null>(null), // yes/no
+    quantitativeThresholds: this.fb.control<string | null>(null), // yes/no
+    qualitativeThresholds: this.fb.control<string | null>(null), // yes/no
+    investigationProcess: this.fb.control<string | null>(null), // yes/no
+
     description: this.fb.control<string | null>(null, [Validators.required, Validators.minLength(10)]),
+
     attributes: this.fb.array<string | null>([]),
   });
 
@@ -61,6 +67,17 @@ export class FormComponent {
     {
       label: 'ITDM',
       value: 'itdm',
+    },
+  ];
+
+  yesNoOptions: SelectOption<boolean>[] = [
+    {
+      label: 'Yes',
+      value: true
+    },
+    {
+      label: 'No',
+      value: false
     },
   ];
 

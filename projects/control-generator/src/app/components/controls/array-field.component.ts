@@ -9,7 +9,7 @@ import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
-  selector: 'app-array-control',
+  selector: 'app-array-field',
   standalone: true,
   imports: [
     MatFormFieldModule,
@@ -45,7 +45,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   `,
   styles: ``
 })
-export class ArrayControlComponent<T> {
+export class ArrayFieldComponent<T> {
   fb = inject(NonNullableFormBuilder);
 
   arrayCtrl = input.required<FormArray<FormControl<T | null>>>();
