@@ -1,5 +1,6 @@
 import { ApplicationRef, ChangeDetectorRef, Injectable, NgZone, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environment/environment';
 
 interface LlmPromptBody {
   prompt: string;
@@ -10,14 +11,23 @@ export class TextStreamService {
   zone = inject(NgZone);
   app = inject(ApplicationRef);
 
-  requestTextStream$(url: string, body: LlmPromptBody) {
+  requestTextStream$(
+    chatId: number,
+    userPrompt: string,
+    systemPrompt: string
+  ) {
     const obs = new Observable<string>((subscriber) => {
       const abortController = new AbortController();
+
+      const url = `${environment.apiUrl}/chat/${chatId}/prompt`;
 
       fetch(url, {
         method: 'POST',
         signal: abortController.signal,
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          userPrompt,
+          systemPrompt
+        }),
         headers: {
           'Content-Type': 'application/json',
         }

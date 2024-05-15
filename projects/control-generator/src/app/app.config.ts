@@ -1,16 +1,18 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withHashLocation } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { QueryClient, provideAngularQuery } from '@tanstack/angular-query-experimental';
 import { LocationStrategy } from '@angular/common';
 import { NoopLocationStrategy } from './util/noop-location-strategy';
 import { environment } from '../environment/environment';
+import { provideState, provideStore } from '@ngrx/store';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideExperimentalZonelessChangeDetection(),
+    // provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(
       routes,
       withComponentInputBinding(),
@@ -18,12 +20,15 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(),
     provideAnimationsAsync(),
-    provideAngularQuery(new QueryClient()),
     ...(environment.stage === 'electron' ? [
       {
         provide: LocationStrategy,
         useClass: NoopLocationStrategy
       }
-    ] : [])
+    ] : []),
+
+    // provideStore(),
+    // provideState(
+    // ),
   ],
 };

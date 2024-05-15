@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
-import { FormComponent as ControlFormComponent } from './pages/control-form.component';
+import { ControlFormPageComponent } from './pages/control-form-page.component';
 import { ControlsPageComponent } from './pages/controls-page.component';
+import { ControlDescriptionPageComponent } from './pages/control-description-page.component';
+import { AttributesRoadmapPageComponent } from './pages/attributes-roadmap-page.component';
+import { AttributesPageComponent } from './pages/attributes-page.component';
 
 export const routes: Routes = [
   {
@@ -8,8 +11,20 @@ export const routes: Routes = [
     component: ControlsPageComponent,
   },
   {
-    path: 'controls/form',
-    component: ControlFormComponent,
+    path: 'controls/form/:controlId',
+    component: ControlFormPageComponent,
+  },
+  {
+    path: 'controls/form/:controlId/description',
+    component: ControlDescriptionPageComponent,
+  },
+  {
+    path: 'controls/form/:controlId/attributes-roadmap',
+    component: AttributesRoadmapPageComponent,
+  },
+  {
+    path: 'controls/form/:controlId/attributes',
+    component: AttributesPageComponent,
   },
   // {
   //   path: '**',

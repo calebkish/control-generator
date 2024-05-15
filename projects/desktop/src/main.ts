@@ -8,6 +8,9 @@ import electronUpdater from 'electron-updater';
 const isDevelopment = process.env['NODE_ENV'] === 'development';
 
 app.whenReady().then(() => {
+  console.log('App path:', app.getAppPath());
+  console.log('User data data:', app.getPath('userData'));
+
   if (isDevelopment) {
     console.log('In development mode. Please start the http server manually');
   } else {
@@ -40,7 +43,8 @@ async function forkHttpServer() {
   const freePort = await getPortFree();
 
   const httpServerPath = path.join(app.getAppPath(), 'tsc-out', 'http-server', 'index.js');
-  const child = utilityProcess.fork(httpServerPath, [app.getPath('userData'), freePort.toString()], { stdio: 'pipe' });
+  // const child = utilityProcess.fork(httpServerPath, [app.getPath('userData'), freePort.toString()], { stdio: 'pipe' });
+  const child = utilityProcess.fork(httpServerPath, [app.getPath('userData'), '3000', app.getAppPath()], { stdio: 'pipe' });
   if (child.stdout) {
     child.stdout.on('data', (data: Buffer) => {
       console.log('CHILD\t| ', data.toString());

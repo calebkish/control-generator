@@ -1,12 +1,10 @@
-import { Component, input } from '@angular/core';
+import { Component, input, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldModule, SubscriptSizing } from '@angular/material/form-field';
 import { getFormControlError } from '../../util/control-error';
-import { MatInputModule } from '@angular/material/input';
+import { MatInput, MatInputModule } from '@angular/material/input';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { map, startWith, switchMap, tap } from 'rxjs';
-import { adapt } from '@state-adapt/angular';
-import { toSource } from '@state-adapt/rxjs';
+import { map, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -19,7 +17,7 @@ import { AsyncPipe } from '@angular/common';
     AsyncPipe,
   ],
   template: `
-<mat-form-field subscriptSizing="dynamic" class="w-full">
+<mat-form-field [subscriptSizing]="subscriptSizing()" class="w-full">
   <mat-label>{{ label() }}</mat-label>
   <input
     matInput
@@ -29,45 +27,31 @@ import { AsyncPipe } from '@angular/common';
   @if (hint()) {
     <mat-hint>{{ hint() }}</mat-hint>
   }
-  @if (error$ | async; as error) {
-    <mat-error>{{ error }}</mat-error>
+  @if (error()) {
+    <mat-error>{{ error() }}</mat-error>
   }
-  <!-- @if (!ctrl().invalid && ctrl().touched && ctrl().hasError('required')) {
-    <mat-error>REQUIRED</mat-error>
-  } -->
 </mat-form-field>
   `
 })
 export class TextFieldComponent {
+  private matInput = viewChild.required(MatInput);
+
   label = input.required<string>();
   disabled = input<boolean>(false);
   hint = input<string | null>(null);
+  subscriptSizing = input<SubscriptSizing>('dynamic');
 
   ctrl = input.required<FormControl<any>>();
-  ctrl$ = toObservable(this.ctrl);
+  protected ctrl$ = toObservable(this.ctrl);
 
-  error$ = this.ctrl$.pipe(
-    switchMap(ctrl => ctrl.statusChanges.pipe(
-      tap((status) => console.log('status change', status)),
+  protected error$ = this.ctrl$.pipe(
+    switchMap(ctrl => ctrl.events.pipe(
       map(() => getFormControlError(ctrl)),
-      // startWith(getFormControlError(ctrl)),
     )),
-    tap((error) => console.log('error', error)),
   );
-  error = toSignal(this.error$);
+  protected error = toSignal(this.error$);
 
-  constructor() {
-    this.ctrl$
-      .pipe(
-        switchMap(ctrl => ctrl.statusChanges),
-      )
-      .subscribe((status) => console.log('status', status));
-
-  }
-
-  ngOnInit() {
-    // setInterval(() => {
-    //   console.log(this.label(), this.ctrl().valid);
-    // }, 500);
+  focus() {
+    this.matInput().focus();
   }
 }

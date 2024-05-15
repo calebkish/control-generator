@@ -1,11 +1,41 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "cdad6361-b4ad-4f51-b011-72dd4e42ce2e",
+  "id": "a706d396-2aa5-4088-9f9c-c25ebc1f6b2a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "controlsTable": {
-      "name": "controlsTable",
+    "chats": {
+      "name": "chats",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "controls": {
+      "name": "controls",
       "columns": {
         "id": {
           "name": "id",
@@ -30,15 +60,88 @@
         },
         "value": {
           "name": "value",
-          "type": "blob",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "controls_name_unique": {
+          "name": "controls_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "controls_to_chats": {
+      "name": "controls_to_chats",
+      "columns": {
+        "control_id": {
+          "name": "control_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "chat_id": {
+          "name": "chat_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "foreignKeys": {
+        "controls_to_chats_control_id_controls_id_fk": {
+          "name": "controls_to_chats_control_id_controls_id_fk",
+          "tableFrom": "controls_to_chats",
+          "tableTo": "controls",
+          "columnsFrom": [
+            "control_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "controls_to_chats_chat_id_chats_id_fk": {
+          "name": "controls_to_chats_chat_id_chats_id_fk",
+          "tableFrom": "controls_to_chats",
+          "tableTo": "chats",
+          "columnsFrom": [
+            "chat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "controls_to_chats_control_id_chat_id_pk": {
+          "columns": [
+            "chat_id",
+            "control_id"
+          ],
+          "name": "controls_to_chats_control_id_chat_id_pk"
+        }
+      },
       "uniqueConstraints": {}
     }
   },

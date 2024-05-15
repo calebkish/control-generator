@@ -12,12 +12,19 @@ export function getFormControlError(ctrl: FormControl): string | null {
   if (validatorType === 'required') {
     return 'Required';
   } else if (validatorType === 'minlength') {
-    return `Minimum of ${validatorError.requiredLength} required`;
+    return `Must be at least ${validatorError.requiredLength} characters long (${validatorError.actualLength}/${validatorError.requiredLength})`;
+  } else if (validatorType === 'min') {
+    return `Must ${validatorError.min} or greater`;
+  } else if (validatorType === 'max') {
+    return `Must ${validatorError.max} or smaller`;
+  } else if (validatorType === 'notANumber') {
+    return 'Must be a number';
   }
 
   if (typeof validatorError === 'string') {
     return validatorError;
   }
 
+  console.error(validatorType, validatorError);
   throw new Error(`Could not find a corresponding message for the validation error "${validatorType}"`);
 }

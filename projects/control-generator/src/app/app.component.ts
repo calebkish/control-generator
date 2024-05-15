@@ -1,13 +1,7 @@
-import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { AngularQueryDevtools } from '@tanstack/angular-query-devtools-experimental';
-import { environment } from '../environment/environment';
-import { Observable, ReadableStreamLike, Subject, defer, from, scan, switchMap, takeUntil, tap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { TextStreamService } from './services/text-stream.service';
 
 declare global {
   interface Window {
@@ -24,7 +18,6 @@ declare global {
   imports: [
     RouterOutlet,
     MatButtonModule,
-    AngularQueryDevtools,
     RouterLink,
     AsyncPipe,
   ],
@@ -37,29 +30,9 @@ declare global {
     <router-outlet />
   </div>
 </div>
-@if (isDev) {
-  <angular-query-devtools />
-}
   `,
 })
 export class AppComponent {
-  isDev = environment.stage === 'development';
-  textStreamService = inject(TextStreamService);
-
-  // generateSuggestion$ = new Subject<void>();
-  // cancel$ = new Subject<void>();
-
-  // text$ = this.generateSuggestion$.pipe(
-  //   switchMap(() => {
-  //     return this.textStreamService.requestTextStream$('http://localhost:4200/api/llm')
-  //       .pipe(
-  //         scan<string, string>((acc, value) => acc + value, ''),
-  //         takeUntil(this.cancel$),
-  //       );
-  //   }),
-  // );
-  // text = toSignal(this.text$, { initialValue: '' });
-
 }
 
 /*
@@ -72,12 +45,4 @@ attribute generation:
 
 - select an example control.
   - example control presumably "finished" and has all its attributes?
-
--
-
-- llm will be fed:
-  - control form
-  - control description
-  - example control
-  - user attribute recommendations
 */

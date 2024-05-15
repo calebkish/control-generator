@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { FormArray, FormControl, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
+import { MatButtonModule, MatMiniFabButton } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -18,19 +18,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatSelectModule,
     MatButtonModule,
     ReactiveFormsModule,
+    MatMiniFabButton,
   ],
   template: `
-  <div class="border-2 border-gray-200 p-3 rounded-md flex flex-col">
-    <div class="text-gray-500 mb-3">{{ label() }}</div>
-
-    <div class="flex flex-col gap-3">
+  <div class="rounded-md flex flex-col gap-4">
+    <div class="flex flex-col gap-8">
       @for (control of arrayControls(); track control; let idx = $index) {
-        <div class="flex gap-2 mb-3 items-center">
+        <div class="flex gap-2">
           <mat-form-field subscriptSizing="dynamic" class="w-full">
-            <!-- <input matInput [formControl]="control" /> -->
-            <textarea matInput [formControl]="control"></textarea>
+            <textarea matInput [formControl]="control" [rows]="this.rows()"></textarea>
           </mat-form-field>
-          <button type="button" mat-icon-button (click)="controlArrayRemove$.next(idx)">
+          <button type="button" mat-icon-button (click)="controlArrayRemove$.next(idx)" class="button-error">
             <mat-icon>delete</mat-icon>
           </button>
         </div>
@@ -48,8 +46,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class ArrayFieldComponent<T> {
   fb = inject(NonNullableFormBuilder);
 
-  arrayCtrl = input.required<FormArray<FormControl<T | null>>>();
+  arrayCtrl = input.required<FormArray<FormControl<T>>>();
+  defaultValue = input.required<T>();
   label = input.required<string>();
+  rows = input<number>(10);
 
   arrayControls = computed(() => {
     const arrayCtrl = this.arrayCtrl();
@@ -63,7 +63,7 @@ export class ArrayFieldComponent<T> {
     this.controlArrayAdd$.pipe(
       takeUntilDestroyed(),
     ).subscribe(() => {
-      const newControl = this.fb.control<T | null>(null);
+      const newControl = this.fb.control<T>(this.defaultValue());
       this.arrayCtrl().push(newControl);
     });
 
@@ -72,5 +72,10 @@ export class ArrayFieldComponent<T> {
     ).subscribe((i) => {
       this.arrayCtrl().removeAt(i);
     });
+  }
+
+  add(value?: T) {
+    const newControl = this.fb.control<T>(value ?? this.defaultValue());
+    this.arrayCtrl().push(newControl);
   }
 }

@@ -11,5 +11,6 @@ https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/blob/main/mistral-
 - `app.getAppPath()`
   - When built: `/home/caleb/electron/my-electron-app/projects/desktop/dist/linux-unpacked/resources/app.asar`
   - When running `electron .`: `/home/caleb/electron/my-electron-app/projects/desktop`
+  - published:
 
 - extract .asar: `npx @electron/asar extract app.asar <destfolder>`

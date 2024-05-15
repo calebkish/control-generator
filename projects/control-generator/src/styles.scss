@@ -1,27 +1,31 @@
-@use '@angular/material-experimental' as matx;
 @use '@angular/material' as mat;
 
 @import '@angular/cdk/overlay-prebuilt.css';
 
-$theme: matx.define-theme((
+$theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: matx.$m3-violet-palette,
+    primary: mat.$violet-palette,
   )
 ));
 @include mat.core();
 
-// Stop dumb warning from showing up saying angular material styles aren't loaded.
-.mat-theme-loaded-marker {
-  display: none;
-}
-
 html {
   @include mat.all-component-themes($theme);
+
   // exposes CSS classes for component colar variants: https://material.angular.io/guide/material-3#optional-add-backwards-compatibility-styles-for-color-variants
-  @include matx.color-variants-back-compat($theme);
+  // @include mat.color-variants-backwards-compatibility($theme);
+
   // exposes CSS classes for typescale: https://material.angular.io/guide/material-3#optional-add-backwards-compatibility-styles-for-typography-hierarchy
   @include mat.typography-hierarchy($theme);
+
+  // The touch target is 48px, but the button is 40px by default, which can
+  // cause issues with overflow.
+  --mdc-text-button-container-height: 48px;
+  --mdc-filled-button-container-height: 48px;
+  --mdc-outlined-button-container-height: 48px;
+  --mdc-protected-button-container-height: 48px;
+  --mdc-icon-button-state-layer-size: 48px;
 }
 
 html, body {
@@ -37,7 +41,7 @@ body {
   font-family: 'Material Icons';
   font-style: normal;
   font-weight: 400;
-  src: url(assets/material-icons.woff2) format('woff2');
+  src: url(../public/material-icons.woff2) format('woff2');
 }
 
 .material-icons {
@@ -61,7 +65,7 @@ body {
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(assets/roboto-300.woff2) format('woff2');
+  src: url(../public/roboto-300.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
@@ -69,7 +73,7 @@ body {
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(assets/roboto-400.woff2) format('woff2');
+  src: url(../public/roboto-400.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
@@ -77,18 +81,30 @@ body {
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(assets/roboto-500.woff2) format('woff2');
+  src: url(../public/roboto-500.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-$error-theme: matx.define-theme((
+$error-theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: matx.$m3-red-palette,
+    primary: mat.$red-palette,
   )
 ));
 
 .snackbar-error {
   @include mat.snack-bar-color($error-theme);
   --mdc-snackbar-container-color: #{mat.get-theme-color($theme, error, 10)};
+}
+
+.button-error {
+  @include mat.button-color($theme, $color-variant: error);
+}
+
+.icon-button-error {
+  @include mat.icon-button-color($error-theme);
+}
+
+.fab-error {
+  @include mat.fab-color($error-theme);
 }

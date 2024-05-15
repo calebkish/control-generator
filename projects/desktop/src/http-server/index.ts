@@ -3,12 +3,13 @@ import { Hono } from 'hono'
 import { migrate } from 'drizzle-orm/libsql/migrator';
 import { db } from './db/index.js';
 import { apiRouter } from './routes/api.js';
-import { port } from './args.js';
+import { appPath, port } from './args.js';
+import path from 'node:path';
 
 try {
-  const migrationsFolder = process.env['NODE_ENV'] === 'electron'
+  const migrationsFolder = process.env['NODE_ENV'] === 'development'
     ? './drizzle'
-    : './drizzle';
+    : path.join(appPath!, 'drizzle');
 
   await migrate(db, { migrationsFolder });
   console.log('SQLite migrations complete');

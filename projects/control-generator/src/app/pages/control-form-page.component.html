@@ -1,0 +1,88 @@
+<div class="w-full max-w-4xl h-full mx-auto flex flex-col gap-4 overflow-auto">
+  <div class="flex-0 text-2xl font-bold mt-1">Edit Control</div>
+
+  <div class="flex gap-6 h-full overflow-auto">
+    <div class="flex flex-col gap-4 h-full overflow-auto flex-1">
+      <div class="flex flex-col gap-4 overflow-auto flex-shrink-1 flex-grow-1">
+        <app-text-field
+          label="Control Name"
+          [ctrl]="form.controls.name"
+        />
+
+        <app-text-field
+          label="General Process Category"
+          [ctrl]="form.controls.gpc"
+        />
+
+        <app-select-field
+          label="Control Type"
+          [ctrl]="form.controls.controlType"
+          [options]="controlTypeOptions"
+        />
+
+        <app-select-field
+          label="Frequency"
+          [ctrl]="form.controls.frequency"
+          [options]="frequencyOptions"
+        />
+
+        <app-textarea-field
+          label="Objective"
+          [ctrl]="form.controls.objective"
+        />
+
+        <app-textarea-field
+          label="IPC"
+          [ctrl]="form.controls.ipc"
+          hint="Information used in the Performance of the Control. Leave empty if not applicable."
+        />
+
+        <app-textarea-field
+          label="Judgement/Complexity Involved"
+          [ctrl]="form.controls.judgementComplexityInvolved"
+          hint="Leave empty if not applicable."
+        />
+
+        <app-number-field
+          label="Quantitative Thresholds"
+          [ctrl]="form.controls.quantitativeThresholds"
+          hint="Leave empty if not applicable."
+        />
+
+        <app-textarea-field
+          label="Qualitative Thresholds"
+          [ctrl]="form.controls.qualitativeThresholds"
+          hint="Leave empty if not applicable."
+        />
+
+        <app-textarea-field
+          label="Investigation and Resolution Process"
+          [ctrl]="form.controls.investigationProcess"
+          hint="Leave empty if not applicable."
+        />
+      </div>
+
+      <button type="button" mat-flat-button (click)="onSubmit$.next()" class="flex-shrink-0">
+        <mat-icon>save</mat-icon>
+        Save
+      </button>
+    </div>
+
+    <mat-divider [vertical]="true" />
+
+    <div class="flex flex-col gap-8">
+      <a mat-raised-button [routerLink]="['description']">
+        <mat-icon>description</mat-icon>
+        Edit description
+      </a>
+      <a mat-raised-button [routerLink]="['attributes-roadmap']">
+        <mat-icon>edit_road</mat-icon>
+        Attributes roadmap
+      </a>
+      <a mat-raised-button [routerLink]="['attributes']">
+        <mat-icon>list</mat-icon>
+        Edit Attributes
+      </a>
+    </div>
+  </div>
+</div>
