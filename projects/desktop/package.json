@@ -1,6 +1,6 @@
 {
   "name": "control-generator",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Control generator",
   "author": "Caleb Kish",
   "license": "ISC",
@@ -23,7 +23,9 @@
     "publish": "electron-builder --publish=always --windows --linux",
     "publish:dev": "cross-env READ_DOTENV=1 electron-builder --publish=always --windows --linux",
     "publish:dev:linux": "cross-env READ_DOTENV=1 electron-builder --publish=always --linux",
+    "publish:dev:windows": "cross-env READ_DOTENV=1 electron-builder --publish=always --windows",
     "http:dev": "cross-env NODE_ENV='development' tsx watch src/http-server/index.ts '/home/caleb/.config/control-generator' '3000'",
+    "http:dev:win": "cross-env NODE_ENV='development' tsx watch src/http-server/index.ts C:\\Users\\windowsmain\\AppData\\Roaming\\my-electron-app 3000",
     "db:generate-migrations": "drizzle-kit generate:sqlite --config './drizzle.config.ts'"
   },
   "devDependencies": {
