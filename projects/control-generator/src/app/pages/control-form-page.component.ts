@@ -1,10 +1,10 @@
-import { Component, DestroyRef, inject, input } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
-import { Subject, firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom, skip } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatAnchor, MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -12,12 +12,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'
 import { TextFieldComponent } from '../components/controls/text-field.component';
 import { TextAreaFieldComponent } from "../components/controls/textarea-field.component";
 import { SelectFieldComponent, SelectOption } from '../components/controls/select-field.component';
-import { AsyncPipe } from '@angular/common';
 import { NumberFieldComponent } from '../components/controls/number-field.component';
 import { controlNameValidators } from './controls-page.component';
 import { HttpControlsService } from '../services/http-controls.service';
 import { ControlSchemaV1 } from '@http';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
 
 @Component({
@@ -36,7 +35,6 @@ import { MatDivider } from '@angular/material/divider';
     TextFieldComponent,
     TextAreaFieldComponent,
     SelectFieldComponent,
-    AsyncPipe,
     NumberFieldComponent,
     MatAnchor,
     RouterLink,
@@ -48,6 +46,8 @@ export class ControlFormPageComponent {
   private snackbar = inject(MatSnackBar);
   private controlsService = inject(HttpControlsService);
   private destroyRef = inject(DestroyRef);
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
 
   controlId = input.required<number, string>({ transform: (val) => parseInt(val) });
 
@@ -119,7 +119,25 @@ export class ControlFormPageComponent {
 
   onSubmit$ = new Subject<void>();
 
+  onNavigate(subRoute: string) {
+    if (this.formDirty()) {
+      this.snackbar.open('Please save the form first', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+      return;
+    }
+    this.router.navigate(['controls', 'form', this.controlId(), subRoute]);
+  }
+
+  formDirty = signal(false);
+
   async ngOnInit() {
+    this.form.valueChanges.pipe(
+      skip(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      console.log('here');
+      this.formDirty.set(true);
+    });
+
     this.onSubmit$.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(async () => {
@@ -146,6 +164,7 @@ export class ControlFormPageComponent {
       await firstValueFrom(this.controlsService.patchControlForm(this.controlId(), patch));
       this.snackbar.open('Saved!', 'Dismiss', { duration: 3000, verticalPosition: 'top' });
       this.controlsService.fetchControlsRequest$.next();
+      this.formDirty.set(false);
     });
 
     const res = await firstValueFrom(this.controlsService.getControl(this.controlId()));

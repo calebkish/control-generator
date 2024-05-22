@@ -19,6 +19,8 @@ export function getFormControlError(ctrl: FormControl): string | null {
     return `Must ${validatorError.max} or smaller`;
   } else if (validatorType === 'notANumber') {
     return 'Must be a number';
+  } else if (validatorType === 'invalidSecureUrl') {
+    return 'Must be a valid secure URL (starts with "https://")';
   }
 
   if (typeof validatorError === 'string') {
