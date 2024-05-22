@@ -71,15 +71,18 @@
     <mat-divider [vertical]="true" />
 
     <div class="flex flex-col gap-8">
-      <a mat-raised-button [routerLink]="['description']">
+      <!-- <a mat-raised-button [routerLink]="['description']"> -->
+      <a mat-raised-button (click)="onNavigate('description')">
         <mat-icon>description</mat-icon>
         Edit description
       </a>
-      <a mat-raised-button [routerLink]="['attributes-roadmap']">
+      <!-- <a mat-raised-button [routerLink]="['attributes-roadmap']"> -->
+      <a mat-raised-button (click)="onNavigate('attributes-roadmap')">
         <mat-icon>edit_road</mat-icon>
         Attributes roadmap
       </a>
-      <a mat-raised-button [routerLink]="['attributes']">
+      <!-- <a mat-raised-button [routerLink]="['attributes']"> -->
+      <a mat-raised-button (click)="onNavigate('attributes')">
         <mat-icon>list</mat-icon>
         Edit Attributes
       </a>

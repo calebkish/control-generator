@@ -1,19 +1,20 @@
 import { Component, DestroyRef, Signal, computed, effect, inject, input, output } from '@angular/core';
 import { SettingsService } from '../services/settings.service';
-import { outputFromObservable, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, Subject, concat, exhaustMap, filter, firstValueFrom, map, of, shareReplay, startWith } from 'rxjs';
 import { ConfigVm, LlmConfigOptionResponse } from '@http';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatIcon } from '@angular/material/icon';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { SelectFieldComponent, SelectOption } from '../components/controls/select-field.component';
 import { TextFieldComponent } from '../components/controls/text-field.component';
 import { MatDivider } from '@angular/material/divider';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { patternWithError } from '../util/pattern-with-error';
 
 @Component({
   selector: 'app-local-llm-option',
@@ -85,9 +86,6 @@ export class LocalLlmOptionComponent {
   }
 }
 
-export type ModelAddDialogData = {
-}
-
 @Component({
   selector: 'app-model-add-dialog',
   standalone: true,
@@ -101,43 +99,41 @@ export type ModelAddDialogData = {
   ],
   template: `
 <h2 mat-dialog-title>Add a model</h2>
-  <mat-dialog-content>
-    <div class="flex flex-col gap-5">
-      <div>
-        <div class="text-lg">Local models</div>
-        @for (option of localLlmOptions(); track option) {
-          <app-local-llm-option [option]="option" (downloadCompleted)="refetchConfigs()" />
-        }
-      </div>
-
-      <mat-divider />
-
-      <div class="flex flex-col gap-3">
-        <div class="text-lg">Azure OpenAI</div>
-        <app-text-field label="API Key" [ctrl]="form.controls.apiKey" />
-        <app-text-field label="Endpoint" [ctrl]="form.controls.endpoint" />
-        <app-select-field label="Model" [ctrl]="form.controls.option" [options]="azureOpenaiLlmOptions()" />
-        <button type="button" mat-flat-button (click)="submit()">Add Azure OpenAI model</button>
-      </div>
-
-      <mat-divider />
+<mat-dialog-content>
+  <div class="flex flex-col gap-5">
+    <div>
+      <div class="text-lg">Local models</div>
+      @for (option of localLlmOptions(); track option) {
+        <app-local-llm-option [option]="option" (downloadCompleted)="refetchConfigs()" />
+      }
     </div>
-  </mat-dialog-content>
-  <mat-dialog-actions>
-    <button mat-button mat-dialog-close>Close</button>
-    <!-- <button mat-button [mat-dialog-close]="systemPromptCtrl.value">Ok</button> -->
-  </mat-dialog-actions>
-  `
+
+    <mat-divider />
+
+    <div class="flex flex-col gap-3">
+      <div class="text-lg">Azure OpenAI</div>
+      <app-text-field label="API Key" [ctrl]="form.controls.apiKey" />
+      <app-text-field label="Endpoint" [ctrl]="form.controls.endpoint" />
+      <app-select-field label="Model" [ctrl]="form.controls.option" [options]="azureOpenaiLlmOptions()" />
+      <button type="button" mat-flat-button (click)="submit()">Add Azure OpenAI model</button>
+    </div>
+
+    <mat-divider />
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>
+  `,
 })
 export class ModelAddDialogComponent {
   protected settingsService = inject(SettingsService);
   private fb = inject(NonNullableFormBuilder);
-  data: ModelAddDialogData = inject(MAT_DIALOG_DATA);
   dialogRef: MatDialogRef<ModelAddDialogComponent> = inject(MatDialogRef);
   snackbar = inject(MatSnackBar);
 
   form = this.fb.group({
-    apiKey: this.fb.control('', [Validators.required]),
+    apiKey: this.fb.control('', [Validators.required, patternWithError(/https:\/\/.*/, 'invalidSecureUrl')]),
     endpoint: this.fb.control('', [Validators.required]),
     option: this.fb.control('', [Validators.required]),
   });
@@ -172,7 +168,6 @@ export class ModelAddDialogComponent {
       return;
     }
 
-    console.log(this.form.value);
     await firstValueFrom(this.settingsService.addAzureOpenaiConfig(this.form.getRawValue()));
     this.settingsService.llmConfigsRefetch$.next();
     this.dialogRef.close();

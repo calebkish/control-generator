@@ -34,3 +34,27 @@ npm run publish:dev
 # For publishing GitHub release through CI/CD pipeline
 npm run publish
 ```
+
+---
+
+Run this stuff initially:
+```sh
+git clone https://github.com/calebkish/control-generator.git
+cd control-generator
+```
+
+In one terminal (inside the `control-generator` folder):
+```sh
+cd projects/control-generator
+npm install --force
+npm run start
+```
+
+In another terminal (inside the `control-generator` folder):
+```sh
+cd projects/desktop
+npm install
+npm run http:dev:win
+```
+
+Then open browser to `http://localhost:4200`

@@ -50,7 +50,7 @@ const upsertControlValidator = z.object({
 
   ipc: z.string().optional(),
   judgement: z.string().optional(),
-  quantitativeThesholds: z.number().optional(),
+  quantitativeThesholds: z.string().optional(),
   qualitativeThresholds: z.string().optional(),
   investigationProcess: z.string().optional(),
   description: z.string().optional(),
