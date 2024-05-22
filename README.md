@@ -36,3 +36,16 @@ npm run publish
 ```
 
 After
+
+---
+
+```sh
+git clone https://github.com/calebkish/control-generator.git
+cd control-generator
+cd projects/control-generator
+npm install --force
+npm run start
+cd ../desktop
+npm install
+npm run http:dev:win
+```
