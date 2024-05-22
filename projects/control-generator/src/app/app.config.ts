@@ -7,7 +7,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { LocationStrategy } from '@angular/common';
 import { NoopLocationStrategy } from './util/noop-location-strategy';
 import { environment } from '../environment/environment';
-import { provideState, provideStore } from '@ngrx/store';
+// import { provideState, provideStore } from '@ngrx/store';
 
 export const appConfig: ApplicationConfig = {
   providers: [

@@ -34,5 +34,3 @@ npm run publish:dev
 # For publishing GitHub release through CI/CD pipeline
 npm run publish
 ```
-
-After
