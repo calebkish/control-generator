@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection, provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding, withHashLocation } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -7,7 +7,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { LocationStrategy } from '@angular/common';
 import { NoopLocationStrategy } from './util/noop-location-strategy';
 import { environment } from '../environment/environment';
-import { provideState, provideStore } from '@ngrx/store';
 
 export const appConfig: ApplicationConfig = {
   providers: [
