@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, map, of, scan, switchMap, takeUntil, tap } from 'rxjs';
 import { signalSlice } from 'ngxtension/signal-slice';
-import { ControlChatResponse, ControlSchemaV1 } from '@http';
+import { ConfigVm, ControlChatResponse, ControlSchemaV1 } from '@http';
 import { TextAreaFieldComponent } from '../components/controls/textarea-field.component';
 import { SystemPromptDialogComponent } from '../components/system-prompt-dialog.component';
 import { TextStreamService } from '../services/text-stream.service';
@@ -16,6 +16,7 @@ import { HttpControlsService } from '../services/http-controls.service';
 import { RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
 import { glossary } from '../util/glossary';
+import { SettingsService } from '../services/settings.service';
 
 @Component({
   selector: 'app-control-description-page',
@@ -31,94 +32,103 @@ import { glossary } from '../util/glossary';
   ],
   template: `
 <div class="flex flex-col gap-6 p-6 h-full">
-  <a mat-button [routerLink]="['..']" class="flex-shrink-0 self-start">
-    <mat-icon>arrow_back</mat-icon>
-    Back to control form
-  </a>
-
-  <div class="flex-0 text-2xl font-bold mt-1">Edit Description</div>
-
-  <div class="flex flex-col gap-4 w-full max-w-4xl mx-auto">
-    <app-textarea-field
-      label="Description"
-      [ctrl]="form.controls.description"
-    />
-
-    <button mat-flat-button type="button" (click)="onSubmit$.next()" class="flex-shrink-0">
-      <mat-icon>save</mat-icon>
-      Save Description
-    </button>
+  <div class="flex gap-5 items-center">
+    <a mat-button [routerLink]="['..']" class="flex-shrink-0 self-start">
+      <mat-icon>arrow_back</mat-icon>
+      Back to control form
+    </a>
+    <div class="flex-0 text-2xl font-bold">Description</div>
   </div>
 
-  <mat-divider />
+  <div class="flex gap-6 overflow-auto h-full">
+    <div class="flex-1 flex flex-col gap-4">
+      <app-textarea-field
+        label="Description"
+        [ctrl]="form.controls.description"
+        [rows]="20"
+      />
 
-  <div class="flex">
-    <button type="button" mat-button (click)="editSystemPrompt$.next()" class="w-full" [disabled]="state.buffer()">
-      <mat-icon>edit</mat-icon>
-      Edit system prompt
-    </button>
-    <button type="button" mat-button (click)="state.clearHistory()" class="w-full button-error" [disabled]="state.buffer()">
-      <mat-icon>delete_sweep</mat-icon>
-      Clear history
-    </button>
-  </div>
+      <button mat-flat-button type="button" (click)="onSubmit$.next()" class="flex-shrink-0">
+        <mat-icon>save</mat-icon>
+        Save
+      </button>
+    </div>
 
-  <div class="scrolling-element overflow-y-auto h-full" #scrollingElement>
-    <div class="flex flex-col gap-8">
-      @for (historyItem of state.history(); track historyItem) {
-        @if (historyItem.type === 'user') {
-          <div>
-            <div class="font-bold flex items-center gap-2">
-              <mat-icon>person</mat-icon>
-              You
+    <mat-divider [vertical]="true" class="flex-0" />
+
+    <div class="flex-1 flex flex-col h-full">
+      <div class="flex">
+        <button type="button" mat-button (click)="editSystemPrompt$.next()" class="w-full" [disabled]="state.buffer()">
+          <mat-icon>edit</mat-icon>
+          Edit system prompt
+        </button>
+        <button type="button" mat-button (click)="state.clearHistory()" class="w-full button-error" [disabled]="state.buffer()">
+          <mat-icon>delete_sweep</mat-icon>
+          Clear history
+        </button>
+      </div>
+
+      <div class="scrolling-element overflow-y-auto h-full" #scrollingElement>
+        <div class="flex flex-col gap-8">
+          @for (historyItem of state.history(); track historyItem) {
+            @if (historyItem.type === 'user') {
+              <div>
+                <div class="font-bold flex items-center gap-2">
+                  <mat-icon>person</mat-icon>
+                  You
+                </div>
+                <div style="white-space: pre-wrap">{{ historyItem.text }}</div>
+              </div>
+            } @else if (historyItem.type === 'model') {
+              <div>
+                <div class="font-bold flex items-center gap-2">
+                  <mat-icon>psychology</mat-icon>
+                  AI
+                </div>
+                <div style="white-space: pre-wrap">{{ historyItem.response[0] }}</div>
+              </div>
+            }
+          }
+          @if (state.buffer(); as buf) {
+            <div>
+              <div class="font-bold flex items-center gap-2">
+                <mat-icon>person</mat-icon>
+                You
+              </div>
+              <div style="white-space: pre-wrap">{{ buf.userPrompt }}</div>
             </div>
-            <div style="white-space: pre-wrap">{{ historyItem.text }}</div>
-          </div>
-        } @else if (historyItem.type === 'model') {
-          <div>
-            <div class="font-bold flex items-center gap-2">
-              <mat-icon>psychology</mat-icon>
-              AI
+            <div>
+              <div class="font-bold flex items-center gap-2">
+                <mat-icon>psychology</mat-icon>
+                AI
+              </div>
+              @if (buf.modelResponse.length === 0) {
+                <mat-spinner [diameter]="16" />
+              } @else {
+                <div style="white-space: pre-wrap">{{ buf.modelResponse }}</div>
+              }
             </div>
-            <div style="white-space: pre-wrap">{{ historyItem.response[0] }}</div>
-          </div>
-        }
-      }
-      @if (state.buffer(); as buf) {
-        <div>
-          <div class="font-bold flex items-center gap-2">
-            <mat-icon>person</mat-icon>
-            You
-          </div>
-          <div style="white-space: pre-wrap">{{ buf.userPrompt }}</div>
-        </div>
-        <div>
-          <div class="font-bold flex items-center gap-2">
-            <mat-icon>psychology</mat-icon>
-            AI
-          </div>
-          @if (buf.modelResponse.length === 0) {
-            <mat-spinner [diameter]="16" />
-          } @else {
-            <div style="white-space: pre-wrap">{{ buf.modelResponse }}</div>
           }
         </div>
+        <div class="anchor flex-shrink-0"></div>
+      </div>
+
+      @if (state.buffer()) {
+        <button type="button" mat-flat-button class="w-full flex-shrink-0 button-error" (click)="cancel$.next()">
+          <mat-icon>cancel</mat-icon>
+          Cancel
+        </button>
+      } @else {
+        <button type="button" mat-flat-button class="w-full flex-shrink-0" (click)="state.critqueRequest()">
+          <mat-icon>emoji_objects</mat-icon>
+          Get AI Critique
+        </button>
       }
-    </div>
-    <div class="anchor flex-shrink-0"></div>
+      </div>
   </div>
 
-  @if (state.buffer()) {
-    <button type="button" mat-flat-button class="w-full flex-shrink-0 button-error" (click)="cancel$.next()">
-      <mat-icon>cancel</mat-icon>
-      Cancel
-    </button>
-  } @else {
-    <button type="button" mat-flat-button class="w-full flex-shrink-0" (click)="state.critqueRequest()">
-      <mat-icon>emoji_objects</mat-icon>
-      Get AI Critique
-    </button>
-  }
+
+
 </div>
   `,
   styles: `
@@ -142,6 +152,7 @@ export class ControlDescriptionPageComponent {
   private textStreamService = inject(TextStreamService);
   private dialog = inject(MatDialog);
   private injector = inject(Injector);
+  private settingsService = inject(SettingsService);
 
   private scrollingElement = viewChild.required('scrollingElement', { read: ElementRef<HTMLElement> });
   private descriptionField = viewChild.required(TextAreaFieldComponent);
@@ -153,18 +164,27 @@ export class ControlDescriptionPageComponent {
   });
 
   initialState: {
+    activeConfig: ConfigVm | null,
     chat: ControlChatResponse | null,
     buffer: {
       userPrompt: string,
       modelResponse: string,
     } | null,
   } = {
+    activeConfig: null,
     chat: null,
     buffer: null,
   };
 
   state = signalSlice({
     initialState: this.initialState,
+    sources: [
+      (state) => this.settingsService.activeConfig$.pipe(
+        map(activeConfig => {
+          return { ...state(), activeConfig };
+        }),
+      ),
+    ],
     actionSources: {
       onInit: (state, $: Observable<void>) => $.pipe(
         switchMap(() => this.controlsService.putControlChat(this.controlId(), 'description')),
@@ -210,6 +230,13 @@ export class ControlDescriptionPageComponent {
             localStorage.setItem(this.lsSystemPromptKey, systemPrompt);
           }
 
+          const activeConfig = state().activeConfig;
+
+          if (!activeConfig) {
+            this.snackbar.open('Please select a model to use first in the settings page.', 'Dismiss', { panelClass: 'snackbar-error', duration: 5000 });
+            return EMPTY;
+          }
+
           return concat(
             of({
               ...state(),
@@ -225,7 +252,10 @@ export class ControlDescriptionPageComponent {
                 }, { injector:  this.injector, phase: AfterRenderPhase.EarlyRead });
               }),
             ),
-            this.textStreamService.requestTextStream$(chat.chatId, userPrompt, systemPrompt).pipe(
+            this.textStreamService.requestTextStream$(
+              `/chat/${chat.chatId}/prompt`,
+              { userPrompt, systemPrompt, configId: activeConfig.id }
+            ).pipe(
               scan((acc, textChunk) => acc + textChunk, ''),
               map((modelResponse) => {
                 return {
@@ -383,10 +413,10 @@ Objective: ${f.objective}
 Control type: ${f.type}
 IPC: ${f.ipc}
 Frequency: ${f.frequency}
-${f.judgement !== undefined ? `Judgement/complexity: ${f.judgement}` : ''}
-${f.quantitativeThesholds !== undefined ? `Quantitative Thresholds: ${f.quantitativeThesholds}` : ''}
-${f.qualitativeThresholds !== undefined ? `Qualitative Thresholds: ${f.qualitativeThresholds}` : ''}
-${f.investigationProcess !== undefined ? `Investigation and resolution procedures: ${f.investigationProcess}` : ''}
+${!!f.judgement ? `Judgement/complexity: ${f.judgement}` : ''}
+${!!f.quantitativeThesholds ? `Quantitative Thresholds: ${f.quantitativeThesholds}` : ''}
+${!!f.qualitativeThresholds ? `Qualitative Thresholds: ${f.qualitativeThresholds}` : ''}
+${!!f.investigationProcess ? `Investigation and resolution procedures: ${f.investigationProcess}` : ''}
 
 Control Description:
 ${userInput}`;

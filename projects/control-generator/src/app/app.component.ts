@@ -23,8 +23,9 @@ declare global {
   ],
   template: `
 <div class="flex w-full h-full">
-  <div class="p-3 bg-violet-200 h-full">
+  <div class="p-3 bg-violet-200 h-full flex flex-col gap-2">
     <a mat-button routerLink='controls'>Controls</a>
+    <a mat-button routerLink='settings'>Settings</a>
   </div>
   <div class="p-3 w-full h-full overflow-auto">
     <router-outlet />

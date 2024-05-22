@@ -9,8 +9,8 @@ if (readDotenv) {
 const ghToken = process.env['GH_TOKEN'];
 
 const config = {
-  appId: 'com.something-cool.electron',
-  productName: 'something-cool',
+  appId: 'com.control-generator.electron',
+  productName: 'control-generator',
 
   // on build, specify the files that should be bundled into the `app.asar`
   files: [
@@ -23,7 +23,7 @@ const config = {
     {
       provider: 'github',
       owner: 'calebkish',
-      repo: 'my-electron-app',
+      repo: 'control-generator',
       private: true,
       ...(ghToken ? { token: ghToken } : {}),
     },

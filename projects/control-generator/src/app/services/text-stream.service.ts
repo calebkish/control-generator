@@ -1,33 +1,22 @@
-import { ApplicationRef, ChangeDetectorRef, Injectable, NgZone, inject } from '@angular/core';
+import { ApplicationRef, Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environment/environment';
 
-interface LlmPromptBody {
-  prompt: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class TextStreamService {
-  zone = inject(NgZone);
-  app = inject(ApplicationRef);
+  private app = inject(ApplicationRef);
 
   requestTextStream$(
-    chatId: number,
-    userPrompt: string,
-    systemPrompt: string
+    path: string,
+    body: object
   ) {
     const obs = new Observable<string>((subscriber) => {
       const abortController = new AbortController();
 
-      const url = `${environment.apiUrl}/chat/${chatId}/prompt`;
-
-      fetch(url, {
+      fetch(`${environment.apiUrl}${path}`, {
         method: 'POST',
         signal: abortController.signal,
-        body: JSON.stringify({
-          userPrompt,
-          systemPrompt
-        }),
+        body: JSON.stringify(body),
         headers: {
           'Content-Type': 'application/json',
         }
@@ -55,7 +44,7 @@ export class TextStreamService {
         })
         .catch((err) => {
           if (err instanceof DOMException) {
-            console.log(`Request to "${url}" was aborted.`);
+            console.log(`Request to "${path}" was aborted.`);
             return;
           }
           subscriber.error(err);

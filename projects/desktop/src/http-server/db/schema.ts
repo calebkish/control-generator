@@ -16,7 +16,7 @@ interface BaseControlSchema {
 
       ipc?: string;
       judgement?: string;
-      quantitativeThesholds?: number;
+      quantitativeThesholds?: string;
       qualitativeThresholds?: string;
       investigationProcess?: string;
 
@@ -110,6 +110,51 @@ export const controlsToChatsRelations = relations(controlsToChatsTable, ({ one }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export const llmConfigLocalLlamaOptions = ['Llama 3 8B Instruct Q2 K', 'Llama 3 8B Instruct Q8 0'] as const;
+export type LlmConfigLocalLlamaOption = typeof llmConfigLocalLlamaOptions[number];
+export const llmConfigAzureOpenAiOptions = ['Azure OpenAI ChatGPT 4'] as const;
+export type LlmConfigAzureOpenAiOption = typeof llmConfigAzureOpenAiOptions[number];
+export type LlmConfigOption = LlmConfigLocalLlamaOption | LlmConfigAzureOpenAiOption;
+
+export const llmConfigTypes = ['LOCAL_LLAMA_V1', 'AZURE_OPENAI_V1'] as const;
+export type LlmConfigType = typeof llmConfigTypes[number];
+
+export interface BaseLlmConfigSchema {
+  schemaVersion: number;
+  value: {
+    type: Extract<LlmConfigType, 'LOCAL_LLAMA_V1'>;
+    fileName: string;
+  } | {
+    type: Extract<LlmConfigType, 'AZURE_OPENAI_V1'>;
+    apiKey: string;
+    endpoint: string;
+  };
+};
+
+export interface LlmConfigSchemaV1 extends BaseLlmConfigSchema {
+  schemaVersion: 1;
+}
+
+export const llmConfigsTable = sqliteTable('llm_configs',
+  {
+    id: integer('id')
+      .primaryKey(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .$default(() => new Date())
+      .notNull(),
+    option: text('option')
+      .notNull(),
+    isActive: integer('is_active', { mode: 'boolean' })
+      .default(false)
+      .notNull(),
+    document: text('value', { mode: 'json' })
+      .$type<LlmConfigSchemaV1>()
+      .notNull(),
+  },
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type Control = InferSelectModel<typeof controlsTable>;
 export type ControlInsertModel = InferInsertModel<typeof controlsTable>;
 
@@ -118,3 +163,6 @@ export type ChatInsertModel = InferInsertModel<typeof chatsTable>;
 
 export type ControlsToChats = InferSelectModel<typeof controlsToChatsTable>;
 export type ControlsToChatsInsertModel = InferInsertModel<typeof controlsToChatsTable>;
+
+export type LlmConfig = InferSelectModel<typeof llmConfigsTable>;
+export type LLmConfigInsertModel = InferInsertModel<typeof llmConfigsTable>;

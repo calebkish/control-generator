@@ -59,11 +59,9 @@ export class ControlFormPageComponent {
     frequency: this.fb.control<string>(''),
     ipc: this.fb.control<string>(''), // yes/no
     judgementComplexityInvolved: this.fb.control<string>(''), // yes/no
-    quantitativeThresholds: this.fb.control<number | null>(null, [Validators.min(0)]), // yes/no
+    quantitativeThresholds: this.fb.control<string>(''), // yes/no
     qualitativeThresholds: this.fb.control<string>(''), // yes/no
     investigationProcess: this.fb.control<string>(''), // yes/no
-    // attributesRoadmap: this.fb.control<string>(''),
-    // attributes: this.fb.array<string>([]),
   });
 
   controlTypeOptions: SelectOption<string>[] = [
@@ -135,9 +133,7 @@ export class ControlFormPageComponent {
       const patch: ControlSchemaV1['value']['form'] = {
         name: formValue.name,
         qualitativeThresholds: formValue.qualitativeThresholds,
-        quantitativeThesholds: formValue.quantitativeThresholds ?? undefined,
-        // attributeRoadmap: formValue.attributesRoadmap,
-        // attributes: formValue.attributes,
+        quantitativeThesholds: formValue.quantitativeThresholds,
         ipc: formValue.ipc,
         judgement: formValue.judgementComplexityInvolved,
         frequency: formValue.frequency,
@@ -166,7 +162,7 @@ export class ControlFormPageComponent {
       judgementComplexityInvolved: formValue.judgement ?? '',
       objective: formValue.objective ?? '',
       qualitativeThresholds: formValue.qualitativeThresholds ?? '',
-      quantitativeThresholds: formValue.quantitativeThesholds ?? null,
+      quantitativeThresholds: formValue.quantitativeThesholds ?? '',
     });
   }
 }

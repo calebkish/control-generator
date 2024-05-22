@@ -4,6 +4,7 @@ import { ControlsPageComponent } from './pages/controls-page.component';
 import { ControlDescriptionPageComponent } from './pages/control-description-page.component';
 import { AttributesRoadmapPageComponent } from './pages/attributes-roadmap-page.component';
 import { AttributesPageComponent } from './pages/attributes-page.component';
+import { SettingsPageComponent } from './pages/settings-page.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,10 @@ export const routes: Routes = [
   {
     path: 'controls/form/:controlId/attributes',
     component: AttributesPageComponent,
+  },
+  {
+    path: 'settings',
+    component: SettingsPageComponent,
   },
   // {
   //   path: '**',

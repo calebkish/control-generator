@@ -1,14 +1,14 @@
 import { AfterRenderPhase, Component, DestroyRef, ElementRef, Injector, afterNextRender, inject, input, viewChild } from '@angular/core';
-import { NonNullableFormBuilder, Validators } from '@angular/forms';
+import { NonNullableFormBuilder } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatAnchor, MatButton, MatMiniFabButton } from '@angular/material/button';
+import { MatAnchor, MatButton, MatIconButton, MatMiniFabButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, map, of, scan, switchMap, takeUntil, tap } from 'rxjs';
 import { signalSlice } from 'ngxtension/signal-slice';
-import { ControlChatResponse, ControlSchemaV1 } from '@http';
+import type { ConfigVm, ControlChatResponse, ControlSchemaV1, LlmConfigOptionResponse } from '@http';
 import { TextAreaFieldComponent } from '../components/controls/textarea-field.component';
 import { SystemPromptDialogComponent } from '../components/system-prompt-dialog.component';
 import { TextStreamService } from '../services/text-stream.service';
@@ -17,6 +17,7 @@ import { RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
 import { glossary } from '../util/glossary';
 import { ArrayFieldComponent } from '../components/controls/array-field.component';
+import { SettingsService } from '../services/settings.service';
 
 @Component({
   selector: 'app-attributes-page',
@@ -31,6 +32,7 @@ import { ArrayFieldComponent } from '../components/controls/array-field.componen
     MatDivider,
     ArrayFieldComponent,
     MatMiniFabButton,
+    MatIconButton,
   ],
   template: `
 <div class="flex flex-col gap-6 p-6 h-full">
@@ -44,7 +46,7 @@ import { ArrayFieldComponent } from '../components/controls/array-field.componen
   </div>
 
 
-  <div class="flex gap-6 overflow-auto">
+  <div class="flex gap-6 overflow-auto h-full">
 
     <div class="flex flex-col gap-4 flex-1 overflow-auto">
       <app-array-field [rows]="15" [label]="''" [arrayCtrl]="form.controls.attributes" [defaultValue]="''" />
@@ -57,7 +59,7 @@ import { ArrayFieldComponent } from '../components/controls/array-field.componen
 
     <mat-divider [vertical]="true" class="flex-0" />
 
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col h-full">
       <div class="flex">
         <button type="button" mat-button (click)="state.viewSystemPrompt()" class="w-full" [disabled]="state.buffer()">
           <mat-icon>visibility</mat-icon>
@@ -160,6 +162,7 @@ export class AttributesPageComponent {
   private textStreamService = inject(TextStreamService);
   private dialog = inject(MatDialog);
   private injector = inject(Injector);
+  private settingsService = inject(SettingsService);
 
   private scrollingElement = viewChild.required('scrollingElement', { read: ElementRef<HTMLElement> });
   private userInputField = viewChild.required('userInput', { read: TextAreaFieldComponent });
@@ -173,18 +176,27 @@ export class AttributesPageComponent {
   });
 
   initialState: {
+    activeConfig: ConfigVm | null,
     chat: ControlChatResponse | null,
     buffer: {
       userPrompt: string,
       modelResponse: string,
     } | null,
   } = {
+    activeConfig: null,
     chat: null,
     buffer: null,
   };
 
   state = signalSlice({
     initialState: this.initialState,
+    sources: [
+      (state) => this.settingsService.activeConfig$.pipe(
+        map(activeConfig => {
+          return { ...state(), activeConfig };
+        }),
+      ),
+    ],
     actionSources: {
       onInit: (state, $: Observable<void>) => $.pipe(
         switchMap(() => this.controlsService.putControlChat(this.controlId(), 'attributes')),
@@ -221,6 +233,13 @@ export class AttributesPageComponent {
           }
           const userPrompt = this.form.controls.userInput.value;
 
+          const activeConfig = state().activeConfig;
+
+          if (!activeConfig) {
+            this.snackbar.open('Please select a model to use first in the settings page.', 'Dismiss', { panelClass: 'snackbar-error', duration: 5000 });
+            return EMPTY;
+          }
+
           return concat(
             of({
               ...state(),
@@ -236,7 +255,10 @@ export class AttributesPageComponent {
                 }, { injector:  this.injector, phase: AfterRenderPhase.EarlyRead });
               }),
             ),
-            this.textStreamService.requestTextStream$(chat.chatId, userPrompt, systemPrompt).pipe(
+            this.textStreamService.requestTextStream$(
+              `/chat/${chat.chatId}/prompt`,
+              { userPrompt, systemPrompt, configId: activeConfig.id }
+            ).pipe(
               scan((acc, textChunk) => acc + textChunk, ''),
               map((modelResponse) => {
                 return {
@@ -305,6 +327,8 @@ export class AttributesPageComponent {
 
           const systemPrompt = getAttributesAssistSystemPrompt(form);
           if (!systemPrompt) {
+            this.snackbar.open('Please provide "General Process Category", "Objective", "Control Type", "IPC", "Frequency", "Description", and "Attribute Roadmap" in the control form first.', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+            console.log('here')
             return EMPTY;
           }
 
@@ -476,10 +500,10 @@ Objective: ${f.objective}
 Control type: ${f.type}
 IPC: ${f.ipc}
 Frequency: ${f.frequency}
-${f.judgement !== undefined ? `Judgement/complexity: ${f.judgement}` : ''}
-${f.quantitativeThesholds !== undefined ? `Quantitative Thresholds: ${f.quantitativeThesholds}` : ''}
-${f.qualitativeThresholds !== undefined ? `Qualitative Thresholds: ${f.qualitativeThresholds}` : ''}
-${f.investigationProcess !== undefined ? `Investigation and resolution procedures: ${f.investigationProcess}` : ''}
+${!!f.judgement ? `Judgement/complexity: ${f.judgement}` : ''}
+${!!f.quantitativeThesholds ? `Quantitative Thresholds: ${f.quantitativeThesholds}` : ''}
+${!!f.qualitativeThresholds ? `Qualitative Thresholds: ${f.qualitativeThresholds}` : ''}
+${!!f.investigationProcess ? `Investigation and resolution procedures: ${f.investigationProcess}` : ''}
 
 Control Description:
 ${f.description}`;
