@@ -24,8 +24,7 @@
     "publish:dev": "cross-env READ_DOTENV=1 electron-builder --publish=always --windows --linux",
     "publish:dev:linux": "cross-env READ_DOTENV=1 electron-builder --publish=always --linux",
     "publish:dev:windows": "cross-env READ_DOTENV=1 electron-builder --publish=always --windows",
-    "http:dev": "cross-env NODE_ENV='development' tsx watch src/http-server/index.ts '/home/caleb/.config/control-generator' '3000'",
-    "http:dev:win": "cross-env NODE_ENV='development' tsx watch src/http-server/index.ts C:\\Users\\windowsmain\\AppData\\Roaming\\control-generator 3000",
+    "http:dev": "cross-env NODE_ENV='development' tsx watch src/http-server/index.ts ./user-data 3000",
     "db:generate-migrations": "drizzle-kit generate:sqlite --config './drizzle.config.ts'"
   },
   "devDependencies": {

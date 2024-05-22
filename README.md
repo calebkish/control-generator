@@ -54,7 +54,7 @@ In another terminal (inside the `control-generator` folder):
 ```sh
 cd projects/desktop
 npm install
-npm run http:dev:win
+npm run http:dev
 ```
 
 Then open browser to `http://localhost:4200`
