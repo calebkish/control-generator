@@ -133,8 +133,8 @@ export class ModelAddDialogComponent {
   snackbar = inject(MatSnackBar);
 
   form = this.fb.group({
-    apiKey: this.fb.control('', [Validators.required, patternWithError(/https:\/\/.*/, 'invalidSecureUrl')]),
-    endpoint: this.fb.control('', [Validators.required]),
+    apiKey: this.fb.control('', [Validators.required]),
+    endpoint: this.fb.control('', [Validators.required, patternWithError(/https:\/\/.*/, 'invalidSecureUrl')]),
     option: this.fb.control('', [Validators.required]),
   });
 
