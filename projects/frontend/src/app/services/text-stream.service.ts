@@ -10,6 +10,7 @@ export class TextStreamService {
     path: string,
     body: object
   ) {
+    let isCompleted = false;
     const obs = new Observable<string>((subscriber) => {
       const abortController = new AbortController();
 
@@ -34,9 +35,11 @@ export class TextStreamService {
               this.app.tick();
             },
             abort: (error) => {
+              console.log('in WritableStream abort', error);
               this.app.tick();
             },
             close: () => {
+              isCompleted = true;
               subscriber.complete();
               this.app.tick();
             },
@@ -50,8 +53,11 @@ export class TextStreamService {
           subscriber.error(err);
         });
 
+      // will run when the observable is unsubscribed.
       return () => {
-        abortController.abort();
+        if (!isCompleted) {
+          abortController.abort();
+        }
       };
     });
 

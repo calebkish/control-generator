@@ -135,7 +135,7 @@ async function handleAzureOpenAiPromptStream(
     ...chat.document.value.history.map(item => {
       if (item.type === 'model') {
         return {
-          role: 'model',
+          role: 'assistant',
           content: item.response.at(0)!,
         };
       } else {

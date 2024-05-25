@@ -1,12 +1,12 @@
 import { Component, DestroyRef, Signal, computed, effect, inject, input, output } from '@angular/core';
 import { SettingsService } from '../services/settings.service';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { Observable, Subject, concat, exhaustMap, filter, firstValueFrom, map, of, shareReplay, startWith } from 'rxjs';
+import { Observable, Subject, concat, exhaustMap, filter, firstValueFrom, map, of, shareReplay, startWith, switchMap } from 'rxjs';
 import { ConfigVm, LlmConfigOptionResponse } from '@http';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -182,6 +182,7 @@ export class ModelAddDialogComponent {
     ReactiveFormsModule,
     MatRadioButton,
     MatIcon,
+    MatIconButton,
     MatButton,
   ],
   template: `
