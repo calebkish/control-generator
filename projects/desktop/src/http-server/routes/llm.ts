@@ -301,15 +301,16 @@ llmRouter.post('file/:option',
     return streamText(c, async (stream) => {
       await stream.write('0');
 
+      stream.onAbort(() => {
+        console.log('on stream abort!');
+        subscription.unsubscribe();
+        fs.unlinkSync(path.join(userDataDir, foundAvailableFile.fileName));
+      });
+
       const subscription = progress$.pipe(
         throttleTime(500),
         switchMap((progress) => from(stream.write(progress.toString())))
       ).subscribe();
-
-      c.req.raw.signal.onabort = () => {
-        subscription.unsubscribe();
-        fs.unlinkSync(path.join(userDataDir, foundAvailableFile.fileName));
-      };
 
       let bytesRead = 0;
       await response.body!
@@ -336,6 +337,9 @@ llmRouter.post('file/:option',
           },
         });
       await stream.write('100');
+      await stream.close();
+    }, async (error, stream) => {
+      console.error('STREAM ERROR:', error);
     });
   },
 );
@@ -488,7 +492,10 @@ llmRouter.delete('configs/:configId',
     }
 
     if (llmConfig.document.value.type == 'LOCAL_LLAMA_V1') {
-      fs.unlinkSync(path.join(userDataDir, llmConfig.document.value.fileName));
+      const modelPath = path.join(userDataDir, llmConfig.document.value.fileName);
+      if (fs.statSync(modelPath, { throwIfNoEntry: false })) {
+        fs.unlinkSync(path.join(userDataDir, llmConfig.document.value.fileName));
+      }
     }
 
     await db.delete(llmConfigsTable)
