@@ -15,4 +15,5 @@ https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/blob/main/mistral-
 
 - extract .asar: `npx @electron/asar extract app.asar <destfolder>`
 
-whisper models: `https://github.com/ggerganov/whisper.cpp/tree/master`
+- [whisper models](https://github.com/ggerganov/whisper.cpp/tree/master)
+- [azure openai docs](https://learn.microsoft.com/en-us/azure/ai-services/openai/chatgpt-quickstart?tabs=command-line%2Cpython-new&pivots=programming-language-javascript)
