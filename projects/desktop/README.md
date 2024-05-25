@@ -14,3 +14,5 @@ https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/blob/main/mistral-
   - published:
 
 - extract .asar: `npx @electron/asar extract app.asar <destfolder>`
+
+whisper models: `https://github.com/ggerganov/whisper.cpp/tree/master`
