@@ -5,6 +5,7 @@ import { ControlDescriptionPageComponent } from './pages/control-description-pag
 import { AttributesRoadmapPageComponent } from './pages/attributes-roadmap-page.component';
 import { AttributesPageComponent } from './pages/attributes-page.component';
 import { SettingsPageComponent } from './pages/settings-page.component';
+import { TranscribePageComponent } from './pages/transcribe-page.component';
 
 export const routes: Routes = [
   {
@@ -31,6 +32,10 @@ export const routes: Routes = [
     path: 'settings',
     component: SettingsPageComponent,
   },
+  // {
+  //   path: 'transcribe',
+  //   component: TranscribePageComponent,
+  // }
   // {
   //   path: '**',
   //   redirectTo: 'controls',

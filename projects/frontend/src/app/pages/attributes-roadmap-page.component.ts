@@ -45,7 +45,6 @@ import { SettingsService } from '../services/settings.service';
       <app-textarea-field
         label="Attributes roadmap"
         [ctrl]="form.controls.attributesRoadmap"
-        [rows]="20"
       />
 
       <button mat-flat-button type="button" (click)="onSubmit$.next()" class="flex-shrink-0">
@@ -77,7 +76,7 @@ import { SettingsService } from '../services/settings.service';
                   <mat-icon>person</mat-icon>
                   You
                 </div>
-                <div style="white-space: pre-wrap">{{ historyItem.text }}</div>
+                <div class="whitespace-pre-wrap text-sm leading-6">{{ historyItem.text }}</div>
               </div>
             } @else if (historyItem.type === 'model') {
               <div>
@@ -85,7 +84,7 @@ import { SettingsService } from '../services/settings.service';
                   <mat-icon>psychology</mat-icon>
                   AI
                 </div>
-                <div style="white-space: pre-wrap">{{ historyItem.response[0] }}</div>
+                <div class="whitespace-pre-wrap text-sm leading-6">{{ historyItem.response[0] }}</div>
               </div>
             }
           }
@@ -194,7 +193,7 @@ export class AttributesRoadmapPageComponent {
           // Scroll to bottom after history has been rendered
           afterNextRender(() => {
             this.scrollToBottom();
-          }, { injector:  this.injector, phase: AfterRenderPhase.EarlyRead });
+          }, { injector:  this.injector, phase: AfterRenderPhase.Read });
 
           let systemPrompt = localStorage.getItem(this.lsSystemPromptKey);
           if (!systemPrompt) {
@@ -240,7 +239,7 @@ export class AttributesRoadmapPageComponent {
                 // Scroll to bottom when buffer has been rendered.
                 afterNextRender(() => {
                   this.scrollToBottom();
-                }, { injector:  this.injector, phase: AfterRenderPhase.EarlyRead });
+                }, { injector:  this.injector, phase: AfterRenderPhase.Read });
               }),
             ),
             this.textStreamService.requestTextStream$(

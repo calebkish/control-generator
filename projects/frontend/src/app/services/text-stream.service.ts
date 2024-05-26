@@ -35,7 +35,6 @@ export class TextStreamService {
               this.app.tick();
             },
             abort: (error) => {
-              console.log('in WritableStream abort', error);
               this.app.tick();
             },
             close: () => {

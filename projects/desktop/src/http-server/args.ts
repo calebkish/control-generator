@@ -10,6 +10,10 @@ if (!_userDataDir) {
 
 const parsedPort = !!_port ? parseInt(_port) : defaultPort;
 
+if (!_appPath) {
+  throw new Error('User data directory was not set.');
+}
+
 export const userDataDir = _userDataDir;
 export const port = Number.isNaN(parsedPort) ? defaultPort : parsedPort;
 export const appPath = _appPath;

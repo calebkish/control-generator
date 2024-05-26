@@ -7,9 +7,7 @@ import { appPath, port } from './args.js';
 import path from 'node:path';
 
 try {
-  const migrationsFolder = process.env['NODE_ENV'] === 'development'
-    ? './drizzle'
-    : path.join(appPath!, 'drizzle');
+  const migrationsFolder = path.join(appPath, 'drizzle');
 
   await migrate(db, { migrationsFolder });
   console.log('SQLite migrations complete');

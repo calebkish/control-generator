@@ -5,19 +5,32 @@ import { getFormControlError } from '../../util/control-error';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 
 @Component({
   selector: 'app-textarea-field',
   standalone: true,
   template: `
 <mat-form-field [subscriptSizing]="this.subscriptSizing()" class="w-full">
-  <mat-label>{{ label() }}</mat-label>
-  <textarea
-    matInput
-    [formControl]="ctrl()"
-    [rows]="rows()"
-    [disabled]="disabled()"
-  ></textarea>
+  @if (label(); as label) {
+    <mat-label>{{ label }}</mat-label>
+  }
+  @if (placeholder(); as placeholder) {
+    <textarea
+      matInput
+      cdkTextareaAutosize
+      [formControl]="ctrl()"
+      [disabled]="disabled()"
+      [placeholder]="placeholder"
+    ></textarea>
+  } @else {
+    <textarea
+      matInput
+      cdkTextareaAutosize
+      [formControl]="ctrl()"
+      [disabled]="disabled()"
+    ></textarea>
+  }
   @if (hint()) {
     <mat-hint>{{ hint() }}</mat-hint>
   }
@@ -30,16 +43,17 @@ import { map, switchMap } from 'rxjs';
     MatFormFieldModule,
     ReactiveFormsModule,
     MatInputModule,
+    CdkTextareaAutosize,
   ]
 })
 export class TextAreaFieldComponent {
   private matInput = viewChild.required(MatInput);
 
-  label = input.required<string>();
+  label = input<string>();
   disabled = input<boolean>(false);
   hint = input<string | null>(null);
-  rows = input<number>(4);
   subscriptSizing = input<SubscriptSizing>('dynamic');
+  placeholder= input<string>();
 
   ctrl = input.required<FormControl<any>>();
   ctrl$ = toObservable(this.ctrl);

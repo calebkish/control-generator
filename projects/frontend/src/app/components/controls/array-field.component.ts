@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 
 @Component({
   selector: 'app-array-field',
@@ -19,6 +20,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatButtonModule,
     ReactiveFormsModule,
     MatMiniFabButton,
+    CdkTextareaAutosize,
   ],
   template: `
   <div class="rounded-md flex flex-col gap-4">
@@ -26,7 +28,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       @for (control of arrayControls(); track control; let idx = $index) {
         <div class="flex gap-2">
           <mat-form-field subscriptSizing="dynamic" class="w-full">
-            <textarea matInput [formControl]="control" [rows]="this.rows()"></textarea>
+            <textarea
+              matInput
+              [formControl]="control"
+              cdkTextareaAutosize
+            ></textarea>
           </mat-form-field>
           <button type="button" mat-icon-button (click)="controlArrayRemove$.next(idx)" class="button-error">
             <mat-icon>delete</mat-icon>

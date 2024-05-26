@@ -29,7 +29,10 @@ app.whenReady().then(() => {
   });
 
   // Do work after the app has started
-  electronUpdater.autoUpdater.checkForUpdatesAndNotify();
+  electronUpdater.autoUpdater.checkForUpdatesAndNotify({
+    title: 'Update available',
+    body: 'A new update is available!',
+  });
 });
 
 app.on('window-all-closed', () => {
@@ -58,34 +61,68 @@ async function forkHttpServer() {
 }
 
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+  const window = new BrowserWindow({
+    width: 1500,
+    height: 1000,
     webPreferences: {
       preload: path.join(app.getAppPath(), 'src', 'preload.js'),
     },
+    show: false,
+    backgroundColor: 'rgb(245 243 255)',
+  });
+
+  window.once('ready-to-show', () => {
+    window.show();
+    window.focus();
   });
 
   if (isDevelopment) {
     console.log('In development mode. Please start angular dev server manually');
-    win.loadURL('http://localhost:4200');
+    window.loadURL('http://localhost:4200');
   } else {
-    win.loadFile('tsc-out/browser/index.html');
+    window.loadFile('tsc-out/browser/index.html');
   }
 }
 
 function setupIpcHandlersAndListeners() {
-  // const llamaPath = path.join(app.getPath('userData'), 'mistral-7b-instruct-v0.2.Q4_K_M.gguf');
-  // const model = new LlamaCpp({ modelPath: llamaPath });
+  ipcMain.handle('ping', async () => {
+    return 'pong';
+  });
 
-  // ipcMain.handle('ping', async () => {
-  //   const prompt = 'Tell me a short story about a happy Llama that 2 sentences long.';
-  //   // const stream = await model.stream(prompt);
-  //   // const reader = stream.getReader();
-  //   // return reader;
-  //   const response = await model.invoke(prompt);
-  //   return response;
-  // });
+  electronUpdater.autoUpdater.on('error', (error) => {
+    console.log('[ELECTRON UPDATER]', error);
+    ipcMain.emit('electron-updater-error', error);
+  });
+
+  electronUpdater.autoUpdater.on('checking-for-update', () => {
+    console.log('[ELECTRON UPDATER]', 'checking for update');
+    ipcMain.emit('electron-updater-checking-for-update');
+  });
+
+  electronUpdater.autoUpdater.on('update-available', (info) => {
+    console.log('[ELECTRON UPDATER]', 'update available');
+    ipcMain.emit('electron-updater-update-available', info);
+  });
+
+  electronUpdater.autoUpdater.on('update-not-available', (info) => {
+    console.log('[ELECTRON UPDATER]', 'update not available');
+    ipcMain.emit('electron-updater-update-not-availabe', info);
+  });
+
+  electronUpdater.autoUpdater.on('update-downloaded', (downloadEvent) => {
+    console.log('[ELECTRON UPDATER]', 'update-downloaded');
+    ipcMain.emit('electron-updater-update-downloaded', downloadEvent);
+  });
+
+  electronUpdater.autoUpdater.on('download-progress', (progress) => {
+    console.log('[ELECTRON UPDATER]', `download progress ${progress.percent}`, progress);
+    ipcMain.emit('electron-updater-download-progress', progress);
+  });
+
+  electronUpdater.autoUpdater.on('update-cancelled', (info) => {
+    console.log('[ELECTRON UPDATER]', 'update canceled');
+    ipcMain.emit('electron-updater-update-cancelled', info);
+  });
 }
 
 

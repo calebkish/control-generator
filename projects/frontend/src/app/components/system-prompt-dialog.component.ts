@@ -23,7 +23,7 @@ export type SystemPromptDialogData = {
   @if (data.mode === 'readonly') {
     <div class="whitespace-pre-wrap">{{ data.systemPrompt }}</div>
   } @else {
-    <app-textarea-field label="System prompt" [ctrl]="systemPromptCtrl" [rows]="15" />
+    <app-textarea-field label="System prompt" [ctrl]="systemPromptCtrl" />
   }
 </mat-dialog-content>
 <mat-dialog-actions>

@@ -80,7 +80,7 @@ import { SettingsService } from '../services/settings.service';
                   <mat-icon>person</mat-icon>
                   You
                 </div>
-                <div style="white-space: pre-wrap">{{ historyItem.text }}</div>
+                <div class="whitespace-pre-wrap text-sm leading-6">{{ historyItem.text }}</div>
               </div>
             } @else if (historyItem.type === 'model') {
               <div>
@@ -88,7 +88,7 @@ import { SettingsService } from '../services/settings.service';
                   <mat-icon>psychology</mat-icon>
                   AI
                 </div>
-                <div style="white-space: pre-wrap">{{ historyItem.response[0] }}</div>
+                <div class="whitespace-pre-wrap text-sm leading-6">{{ historyItem.response[0] }}</div>
               </div>
             }
           }
@@ -122,18 +122,25 @@ import { SettingsService } from '../services/settings.service';
           Cancel
         </button>
       } @else {
-        <div class="flex gap-2">
-          <app-textarea-field
-            #userInput
-            class="flex-1"
-            label=""
-            [ctrl]="form.controls.userInput"
-            subscriptSizing="fixed"
-          />
-          <button type="button" mat-icon-button class="flex-0" (click)="state.critqueRequest()">
-            <mat-icon>emoji_objects</mat-icon>
-          </button>
-        </div>
+        @if (state.historyIsEmpty()) {
+        <button type="button" mat-flat-button class="w-full flex-shrink-0" (click)="state.critqueRequest()">
+          <mat-icon>emoji_objects</mat-icon>
+          AI Generate Attributes
+        </button>
+        } @else {
+          <div class="flex gap-2">
+            <app-textarea-field
+              #userInput
+              class="flex-1"
+              [ctrl]="form.controls.userInput"
+              subscriptSizing="fixed"
+              placeholder="Message the AI"
+            />
+            <button type="button" mat-icon-button class="flex-0" (click)="state.critqueRequest()">
+              <mat-icon>emoji_objects</mat-icon>
+            </button>
+          </div>
+        }
       }
     </div>
 
@@ -208,7 +215,7 @@ export class AttributesPageComponent {
           // Scroll to bottom after history has been rendered
           afterNextRender(() => {
             this.scrollToBottom();
-          }, { injector: this.injector, phase: AfterRenderPhase.EarlyRead });
+          }, { injector: this.injector, phase: AfterRenderPhase.Read });
         }),
         map((res) => ({ ...state(), chat: res })),
       ),
@@ -217,12 +224,23 @@ export class AttributesPageComponent {
           const chat = state().chat;
           if (!chat) return EMPTY;
 
-          if (!this.form.controls.userInput.valid) {
-            this.form.controls.userInput.markAsTouched();
-            this.form.controls.userInput.updateValueAndValidity();
-            this.snackbar.open('Please enter something in the input', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
-            console.log()
-            this.userInputField().focus();
+          const userPrompt = (() => {
+            if ((state().chat?.history ?? []).length === 0) {
+              return 'Please generate some attributes';
+            }
+
+            if (!this.form.controls.userInput.valid) {
+              this.form.controls.userInput.markAllAsTouched();
+              this.form.controls.userInput.updateValueAndValidity();
+              this.snackbar.open('Please enter something in the input', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+              this.userInputField().focus();
+              return null;
+            }
+
+            return this.form.controls.userInput.value;
+          })();
+
+          if (userPrompt === null) {
             return EMPTY;
           }
 
@@ -231,7 +249,6 @@ export class AttributesPageComponent {
             this.snackbar.open('Please provide these first: "General Process Category", "Objective", "Control Type", "IPC", "Frequency", "Description", "Attributes Roadmap"', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
             return EMPTY;
           }
-          const userPrompt = this.form.controls.userInput.value;
 
           const activeConfig = state().activeConfig;
 
@@ -247,14 +264,16 @@ export class AttributesPageComponent {
                 userPrompt: userPrompt,
                 modelResponse: '',
               },
-            } satisfies typeof this.initialState).pipe(
-              tap(() => {
-                // Scroll to bottom when buffer has been rendered.
-                afterNextRender(() => {
-                  this.scrollToBottom();
-                }, { injector:  this.injector, phase: AfterRenderPhase.EarlyRead });
-              }),
-            ),
+            } satisfies typeof this.initialState)
+              .pipe(
+                tap(() => {
+                  // Scroll to bottom when buffer has been rendered.
+                  afterNextRender(() => {
+                    this.scrollToBottom();
+                  }, { injector:  this.injector, phase: AfterRenderPhase.Read });
+                }),
+              ),
+
             this.textStreamService.requestTextStream$(
               `/chat/${chat.chatId}/prompt`,
               { userPrompt, systemPrompt, configId: activeConfig.id }
@@ -296,8 +315,16 @@ export class AttributesPageComponent {
               ),
               takeUntil(this.cancel$),
             ),
+
             // Needs to be in a defer so we get the latest state.
-            defer(() => of({ ...state(), buffer: null })),
+            defer(() => of({ ...state(), buffer: null }).pipe(
+              tap(() => {
+                this.form.controls.userInput.reset();
+                afterNextRender(() => {
+                  this.scrollToBottom();
+                }, { injector:  this.injector, phase: AfterRenderPhase.Read });
+              }),
+            )),
           );
         }),
       ),
@@ -328,7 +355,6 @@ export class AttributesPageComponent {
           const systemPrompt = getAttributesAssistSystemPrompt(form);
           if (!systemPrompt) {
             this.snackbar.open('Please provide "General Process Category", "Objective", "Control Type", "IPC", "Frequency", "Description", and "Attribute Roadmap" in the control form first.', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
-            console.log('here')
             return EMPTY;
           }
 
@@ -348,6 +374,7 @@ export class AttributesPageComponent {
     },
     selectors: (state) => ({
       history: () => state.chat()?.history ?? [],
+      historyIsEmpty: () => (state.chat()?.history ?? []).length === 0,
     }),
     // effects: (state) => ({
     //   init: () => {
