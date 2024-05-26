@@ -36,8 +36,8 @@ export const routes: Routes = [
   //   path: 'transcribe',
   //   component: TranscribePageComponent,
   // }
-  // {
-  //   path: '**',
-  //   redirectTo: 'controls',
-  // }
+  {
+    path: '**',
+    redirectTo: 'controls',
+  },
 ];
