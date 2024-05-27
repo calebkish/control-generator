@@ -48,15 +48,3 @@ export class AppComponent implements OnInit {
     });
   }
 }
-
-/*
-attribute generation:
-
-# if no attributes exist:
-- ask user to select an example control.
-
-- user pastes in each attribute as they would like into chat input.
-
-- select an example control.
-  - example control presumably "finished" and has all its attributes?
-*/
