@@ -1,15 +1,49 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
+import { MatButton, MatButtonModule } from '@angular/material/button';
 import { AsyncPipe } from '@angular/common';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarAction, MatSnackBarActions, MatSnackBarLabel, MatSnackBarRef } from '@angular/material/snack-bar';
 
 declare global {
   interface Window {
     ipc?: {
-      invoke: (channel: string, ...args: any[]) => Promise<any>;
+      invoke: (channel: string, ...args: any[]) => any;
       on: (channel: string, handler: (...args: any[]) => Promise<any>) => () => void;
     }
+  }
+}
+
+@Component({
+  selector: 'restart-snack',
+  standalone: true,
+  imports: [
+    MatButton,
+    MatSnackBarAction,
+    MatSnackBarActions,
+    MatSnackBarLabel,
+  ],
+  template: `
+<div class="flex">
+  <div matSnackBarLabel>
+    A new update has been downloaded. Please restart the app for it to take effect.
+  </div>
+  <div matSnackBarActions class="flex">
+    <button type="button" matSnackBarAction mat-button (click)="restart()">Restart</button>
+    <button type="button" matSnackBarAction mat-button (click)="dismiss()">Dismiss</button>
+  </div>
+</div>
+  `,
+})
+export class RestartSnackComponent {
+  private snackbarRef = inject(MatSnackBarRef);
+
+  restart() {
+    window.ipc?.invoke('quit-and-install');
+    this.snackbarRef.dismissWithAction();
+  }
+
+  dismiss() {
+    this.snackbarRef.dismissWithAction();
   }
 }
 
@@ -39,12 +73,15 @@ export class AppComponent implements OnInit {
   private snackbar = inject(MatSnackBar);
 
   async ngOnInit() {
+    this.snackbar.openFromComponent(RestartSnackComponent);
+
     window.ipc?.on('electron-updater-update-downloaded', async () => {
-      this.snackbar.open(
-        'A new update has been downloaded. Please restart the app for it to take effect.',
-        'Dismiss',
-        { duration: 5000 }
-      );
+      this.snackbar.openFromComponent(RestartSnackComponent, { duration: 5000 });
+      // this.snackbar.open(
+      //   'A new update has been downloaded. Please restart the app for it to take effect.',
+      //   'Dismiss',
+      //   { duration: 5000 }
+      // );
     });
   }
 }

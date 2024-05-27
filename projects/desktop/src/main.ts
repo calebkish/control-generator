@@ -31,6 +31,7 @@ app.whenReady().then(() => {
   console.log('[ELECTRON]', 'checking for update');
   ipcMain.emit('electron-updater-checking-for-update');
   // Do work after the app has started
+  console.log('[ELECTRON-UPDATER]', 'autoInstallOnAppQuit', electronUpdater.autoUpdater.autoInstallOnAppQuit);
   electronUpdater.autoUpdater.checkForUpdatesAndNotify({
     title: 'Update available',
     body: 'A new update is available!',
@@ -87,16 +88,10 @@ function createWindow() {
 }
 
 function setupIpcHandlersAndListeners() {
-  // ipcMain.handle('check-for-updates', async () => {
-  //   console.log('[ELECTRON]', 'emitting pong');
-  //   const result = await electronUpdater.autoUpdater.checkForUpdatesAndNotify({
-  //     title: 'Update available',
-  //     body: 'A new update is available!',
-  //   });
-  //   const updateCheckResult = await electronUpdater.autoUpdater.checkForUpdates();
-  //   electronUpdater.autoUpdater.
-  //   return result;
-  // });
+  ipcMain.handle('quit-and-install', () => {
+    console.log('[ELECTRON UPDATER]', 'Invoking quitAndInstall');
+    electronUpdater.autoUpdater.quitAndInstall();
+  });
 
   electronUpdater.autoUpdater.on('error', (error) => {
     console.log('[ELECTRON UPDATER]', error);
