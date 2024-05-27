@@ -28,6 +28,8 @@ app.whenReady().then(() => {
     }
   });
 
+  console.log('[ELECTRON]', 'checking for update');
+  ipcMain.emit('electron-updater-checking-for-update');
   // Do work after the app has started
   electronUpdater.autoUpdater.checkForUpdatesAndNotify({
     title: 'Update available',
@@ -85,9 +87,16 @@ function createWindow() {
 }
 
 function setupIpcHandlersAndListeners() {
-  ipcMain.handle('ping', async () => {
-    return 'pong';
-  });
+  // ipcMain.handle('check-for-updates', async () => {
+  //   console.log('[ELECTRON]', 'emitting pong');
+  //   const result = await electronUpdater.autoUpdater.checkForUpdatesAndNotify({
+  //     title: 'Update available',
+  //     body: 'A new update is available!',
+  //   });
+  //   const updateCheckResult = await electronUpdater.autoUpdater.checkForUpdates();
+  //   electronUpdater.autoUpdater.
+  //   return result;
+  // });
 
   electronUpdater.autoUpdater.on('error', (error) => {
     console.log('[ELECTRON UPDATER]', error);

@@ -1,12 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { AsyncPipe } from '@angular/common';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 declare global {
   interface Window {
-    ipc: {
-      invoke: (channel: string, ...args: any[]) => any;
+    ipc?: {
+      invoke: (channel: string, ...args: any[]) => Promise<any>;
       on: (channel: string, handler: (...args: any[]) => Promise<any>) => () => void;
     }
   }
@@ -34,7 +35,18 @@ declare global {
 </div>
   `,
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  private snackbar = inject(MatSnackBar);
+
+  async ngOnInit() {
+    window.ipc?.on('electron-updater-update-downloaded', async () => {
+      this.snackbar.open(
+        'A new update has been downloaded. Please restart the app for it to take effect.',
+        'Dismiss',
+        { duration: 5000 }
+      );
+    });
+  }
 }
 
 /*

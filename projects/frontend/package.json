@@ -6,6 +6,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:electron": "ng build --configuration electron",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "cp": "ng build --configuration electron && cp -r dist/control-generator/browser/ ../desktop/tsc-out"
