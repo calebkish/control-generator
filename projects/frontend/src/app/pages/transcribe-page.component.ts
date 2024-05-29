@@ -40,7 +40,7 @@ export class TranscribePageComponent {
     switchMap((file) => {
       const formData = new FormData();
       formData.append('file', file);
-      return this.http.post<{ text: string }>(`${environment.apiUrl}/transcribe`, formData).pipe(
+      return this.http.post<{ text: string }>(`lol/transcribe`, formData).pipe(
         wrap(),
       );
     }),

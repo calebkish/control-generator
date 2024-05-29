@@ -35,6 +35,7 @@
           "configurations": {
             "electron": {
               "outputHashing": "all",
+              "sourceMap": true,
               "fileReplacements": [
                 {
                   "replace": "src/environment/environment.ts",

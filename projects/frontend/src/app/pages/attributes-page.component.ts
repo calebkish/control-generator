@@ -10,7 +10,7 @@ import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, 
 import { signalSlice } from 'ngxtension/signal-slice';
 import type { ConfigVm, ControlChatResponse, ControlSchemaV1, LlmConfigOptionResponse } from '@http';
 import { TextAreaFieldComponent } from '../components/controls/textarea-field.component';
-import { SystemPromptDialogComponent } from '../components/system-prompt-dialog.component';
+import { SystemPromptDialogComponent, SystemPromptDialogData } from '../components/system-prompt-dialog.component';
 import { TextStreamService } from '../services/text-stream.service';
 import { HttpControlsService } from '../services/http-controls.service';
 import { RouterLink } from '@angular/router';
@@ -245,8 +245,8 @@ export class AttributesPageComponent {
           }
 
           const systemPrompt = getAttributesAssistSystemPrompt(chat.controlForm);
-          if (systemPrompt === null) {
-            this.snackbar.open('Please provide these first: "General Process Category", "Objective", "Control Type", "IPC", "Frequency", "Description", "Attributes Roadmap"', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+          if (!systemPrompt.success) {
+            this.snackbar.open(systemPrompt.message, 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
             return EMPTY;
           }
 
@@ -276,7 +276,7 @@ export class AttributesPageComponent {
 
             this.textStreamService.requestTextStream$(
               `/chat/${chat.chatId}/prompt`,
-              { userPrompt, systemPrompt, configId: activeConfig.id }
+              { userPrompt, systemPrompt: systemPrompt.message, configId: activeConfig.id }
             ).pipe(
               scan((acc, textChunk) => acc + textChunk, ''),
               map((modelResponse) => {
@@ -353,8 +353,8 @@ export class AttributesPageComponent {
           }
 
           const systemPrompt = getAttributesAssistSystemPrompt(form);
-          if (!systemPrompt) {
-            this.snackbar.open('Please provide "General Process Category", "Objective", "Control Type", "IPC", "Frequency", "Description", and "Attribute Roadmap" in the control form first.', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+          if (!systemPrompt.success) {
+            this.snackbar.open(systemPrompt.message, 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
             return EMPTY;
           }
 
@@ -363,9 +363,9 @@ export class AttributesPageComponent {
             maxWidth: '100%',
             minHeight: '30rem',
             data: {
-              systemPrompt,
+              systemPrompt: systemPrompt.message,
               mode: 'readonly',
-            },
+            } satisfies SystemPromptDialogData,
           }).afterClosed().pipe(
             map(() => ({}))
           );
@@ -496,11 +496,21 @@ Because this control contains significant judgement or complexity, it is importa
 `;
 
 const getAttributesAssistSystemPrompt = (f: ControlSchemaV1['value']['form']) => {
-  if (!f.generalProcessCategory || !f.objective || !f.type || !f.ipc || !f.frequency || !f.description || !f.attributeRoadmap) {
-    return null;
+  if (!f.generalProcessCategory || !f.objective || !f.type || !f.frequency || !f.description || !f.attributeRoadmap) {
+    return {
+      success: false,
+      message: 'Please provide these first: "General Process Category", "Objective", "Control Type", "Frequency", "Description", "Attributes Roadmap"',
+    };
   }
 
-  return `Role:
+  if (f.type === 'itdm' && !f.ipc) {
+    return {
+      success: false,
+      message: 'Control type is ITDM, please provide "IPC"',
+    }
+  }
+
+  const prompt = `Role:
 You are an expert CPA specifically designed to assist in writing internal controls that address the control objective specified. Your objective is to write control attributes based on the information provided.
 
 ${glossary}
@@ -534,4 +544,9 @@ ${!!f.investigationProcess ? `Investigation and resolution procedures: ${f.inves
 
 Control Description:
 ${f.description}`;
+
+  return {
+    success: false,
+    message: prompt,
+  }
 }

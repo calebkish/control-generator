@@ -4,15 +4,6 @@ import { MatButton, MatButtonModule } from '@angular/material/button';
 import { AsyncPipe } from '@angular/common';
 import { MatSnackBar, MatSnackBarAction, MatSnackBarActions, MatSnackBarLabel, MatSnackBarRef } from '@angular/material/snack-bar';
 
-declare global {
-  interface Window {
-    ipc?: {
-      invoke: (channel: string, ...args: any[]) => any;
-      on: (channel: string, handler: (...args: any[]) => Promise<any>) => () => void;
-    }
-  }
-}
-
 @Component({
   selector: 'restart-snack',
   standalone: true,
@@ -37,8 +28,8 @@ declare global {
 export class RestartSnackComponent {
   private snackbarRef = inject(MatSnackBarRef);
 
-  restart() {
-    window.ipc?.invoke('quit-and-install');
+  async restart() {
+    await window.ipc?.invoke('quit-and-install');
     this.snackbarRef.dismissWithAction();
   }
 
@@ -73,15 +64,17 @@ export class AppComponent implements OnInit {
   private snackbar = inject(MatSnackBar);
 
   async ngOnInit() {
-    this.snackbar.openFromComponent(RestartSnackComponent);
-
     window.ipc?.on('electron-updater-update-downloaded', async () => {
-      this.snackbar.openFromComponent(RestartSnackComponent, { duration: 5000 });
-      // this.snackbar.open(
-      //   'A new update has been downloaded. Please restart the app for it to take effect.',
-      //   'Dismiss',
-      //   { duration: 5000 }
-      // );
+      this.snackbar.openFromComponent(RestartSnackComponent, { duration: 10000 });
     });
+
+    window.ipc?.on('download-progress', async (progress) => {
+      console.log('progress:', progress);
+    });
+
+    const updateCheckResult = await window.ipc?.invoke('check-for-updates');
+    if (updateCheckResult) {
+      this.snackbar.open('A new update is available! Please keep the application open while it\'s downloaded.', 'Dismiss', { duration: 10000 });
+    }
   }
 }

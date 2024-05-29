@@ -218,8 +218,8 @@ export class ControlDescriptionPageComponent {
           const description = this.form.controls.description.getRawValue();
 
           const userPrompt = getDescriptionAssistUserPrompt(chat.controlForm, description);
-          if (userPrompt === null) {
-            this.snackbar.open('Please provide "General Process Category", "Objective", "Control Type", "IPC", and "Frequency" in the control form first.', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+          if (!userPrompt.success) {
+            this.snackbar.open(userPrompt.message, 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
             return EMPTY;
           }
 
@@ -240,7 +240,7 @@ export class ControlDescriptionPageComponent {
             of({
               ...state(),
               buffer: {
-                userPrompt: userPrompt,
+                userPrompt: userPrompt.message,
                 modelResponse: '',
               },
             } satisfies typeof this.initialState).pipe(
@@ -253,14 +253,14 @@ export class ControlDescriptionPageComponent {
             ),
             this.textStreamService.requestTextStream$(
               `/chat/${chat.chatId}/prompt`,
-              { userPrompt, systemPrompt, configId: activeConfig.id }
+              { userPrompt: userPrompt.message, systemPrompt, configId: activeConfig.id }
             ).pipe(
               scan((acc, textChunk) => acc + textChunk, ''),
               map((modelResponse) => {
                 return {
                   ...state(),
                   buffer: {
-                    userPrompt: userPrompt,
+                    userPrompt: userPrompt.message,
                     modelResponse: modelResponse,
                   },
                 } satisfies typeof this.initialState;
@@ -399,11 +399,21 @@ const getDescriptionAssistUserPrompt = (
   f: ControlSchemaV1['value']['form'],
   userInput: string
 ) => {
-  if (!f.generalProcessCategory || !f.objective || !f.type || !f.ipc || !f.frequency) {
-    return null;
+  if (!f.generalProcessCategory || !f.objective || !f.type || !f.frequency) {
+    return {
+      success: false,
+      message: 'Please provide "General Process Category", "Objective", "Control Type", and "Frequency" in the control form first.'
+    };
   }
 
-  return `What are some bullet point questions to critique the Control Description below, using the Control Form as context? Once you believe the description is sufficient, reply with, "No further recommendations. Please proceed to control design step."
+  if (f.type === 'itdm' && !f.ipc) {
+    return {
+      success: false,
+      message: 'Control type is ITDM, but IPC is missing.'
+    }
+  }
+
+  const userPrompt = `What are some bullet point questions to critique the Control Description below, using the Control Form as context? Once you believe the description is sufficient, reply with, "No further recommendations. Please proceed to control design step."
 
 Control Form:
 Name: ${f.name}
@@ -419,4 +429,9 @@ ${!!f.investigationProcess ? `Investigation and resolution procedures: ${f.inves
 
 Control Description:
 ${userInput}`;
+
+  return {
+    success: true,
+    message: userPrompt,
+  }
 };

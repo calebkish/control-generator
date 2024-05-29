@@ -1,12 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { environment } from '../../environment/environment';
 import type { Control, ControlChatResponse, ControlSchemaV1 } from '@http';
 import { Observable, Subject, shareReplay, startWith, switchMap } from 'rxjs';
+import { EnvironmentService } from './environment.service';
 
 @Injectable({ providedIn: 'root' })
 export class HttpControlsService {
   private http = inject(HttpClient);
+  private env = inject(EnvironmentService);
 
   fetchControlsRequest$ = new Subject<void>();
 
@@ -17,43 +18,43 @@ export class HttpControlsService {
   );
 
   private getControls(): Observable<Control[]> {
-    return this.http.get<Control[]>(`${environment.apiUrl}/controls`);
+    return this.env.withApiUrl$(url => this.http.get<Control[]>(`${url}/controls`));
   }
 
   createControl(name: string) {
-    return this.http.post<{ success: boolean, control: Control }>(
-      `${environment.apiUrl}/controls`,
+    return this.env.withApiUrl$(url => this.http.post<{ success: boolean, control: Control }>(
+      `${url}/controls`,
       { name }
-    );
+    ));
   }
 
   getControl(controlId: number): Observable<Control> {
-    return this.http.get<Control>(`${environment.apiUrl}/controls/${controlId}`);
+    return this.env.withApiUrl$(url => this.http.get<Control>(`${url}/controls/${controlId}`));
   }
 
   patchControlForm(
     controlId: number,
     form: Partial<ControlSchemaV1['value']['form']>
   ): Observable<void> {
-    return this.http.patch<void>(`${environment.apiUrl}/controls/${controlId}`, form);
+    return this.env.withApiUrl$(url => this.http.patch<void>(`${url}/controls/${controlId}`, form));
   }
 
   deleteControl(controlId: number) {
-    return this.http.delete<void>(`${environment.apiUrl}/controls/${controlId}`);
+    return this.env.withApiUrl$(url => this.http.delete<void>(`${url}/controls/${controlId}`));
   }
 
   putControlChat(controlId: number, type: string) {
-    return this.http.put<ControlChatResponse>(`${environment.apiUrl}/controls/${controlId}/chat/${type}`, {});
+    return this.env.withApiUrl$(url => this.http.put<ControlChatResponse>(`${url}/controls/${controlId}/chat/${type}`, {}));
   }
 
   postChat(chatId: number, userPrompt: string) {
-    return this.http.post(`${environment.apiUrl}/chat/${chatId}/prompt`, {
+    return this.env.withApiUrl$(url => this.http.post(`${url}/chat/${chatId}/prompt`, {
       userPrompt,
-    });
+    }));
   }
 
   deleteChatHistory(chatId: number): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/chat/${chatId}/history`);
+    return this.env.withApiUrl$(url => this.http.delete<void>(`${url}/chat/${chatId}/history`));
   }
 
 }

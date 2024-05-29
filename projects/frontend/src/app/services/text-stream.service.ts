@@ -1,10 +1,11 @@
 import { ApplicationRef, Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../environment/environment';
+import { EnvironmentService } from './environment.service';
 
 @Injectable({ providedIn: 'root' })
 export class TextStreamService {
   private app = inject(ApplicationRef);
+  private env = inject(EnvironmentService);
 
   requestTextStream$(
     path: string,
@@ -14,14 +15,17 @@ export class TextStreamService {
     const obs = new Observable<string>((subscriber) => {
       const abortController = new AbortController();
 
-      fetch(`${environment.apiUrl}${path}`, {
-        method: 'POST',
-        signal: abortController.signal,
-        body: JSON.stringify(body),
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
+      this.env.getApiUrl()
+        .then((url) => {
+          return fetch(`${url}${path}`, {
+            method: 'POST',
+            signal: abortController.signal,
+            body: JSON.stringify(body),
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          })
+        })
         .then(async (response) => {
           const stream = response.body!;
           const decoder = new TextDecoder('utf-8');

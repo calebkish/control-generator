@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { environment } from '../../environment/environment';
 import { Observable, Subject, concat, exhaustMap, map, merge, of, shareReplay, startWith, switchMap, withLatestFrom } from 'rxjs';
 import { ConfigVm, LlmConfigOptionResponse } from '@http';
 import { TextStreamService } from './text-stream.service';
+import { EnvironmentService } from './environment.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +11,7 @@ import { TextStreamService } from './text-stream.service';
 export class SettingsService {
   private readonly http = inject(HttpClient);
   private readonly textStreamService = inject(TextStreamService);
+  private readonly env = inject(EnvironmentService);
 
   llmConfigsRefetch$ = new Subject<void>();
   activateConfig$ = new Subject<number>();
@@ -63,11 +64,11 @@ export class SettingsService {
   );
 
   private getLlmConfigs() {
-    return this.http.get<ConfigVm[]>(`${environment.apiUrl}/configs`);
+    return this.env.withApiUrl$(url => this.http.get<ConfigVm[]>(`${url}/configs`));
   }
 
   getLlmOptions() {
-    return this.http.get<LlmConfigOptionResponse[]>(`${environment.apiUrl}/models`)
+    return this.env.withApiUrl$(url => this.http.get<LlmConfigOptionResponse[]>(`${url}/models`));
   }
 
   downloadFile(option: string) {
@@ -75,11 +76,11 @@ export class SettingsService {
   }
 
   activateConfig(configId: number) {
-    return this.http.post<void>(`${environment.apiUrl}/configs/${configId}/activate`, {});
+    return this.env.withApiUrl$(url => this.http.post<void>(`${url}/configs/${configId}/activate`, {}));
   }
 
   deleteConfig(configId: number) {
-    return this.http.delete<void>(`${environment.apiUrl}/configs/${configId}`);
+    return this.env.withApiUrl$(url => this.http.delete<void>(`${url}/configs/${configId}`));
   }
 
   addAzureOpenaiConfig(body: {
@@ -87,6 +88,6 @@ export class SettingsService {
     endpoint: string,
     option: string,
   }) {
-    return this.http.post(`${environment.apiUrl}/configs/azure-openai`, body);
+    return this.env.withApiUrl$(url => this.http.post(`${url}/configs/azure-openai`, body));
   }
 }

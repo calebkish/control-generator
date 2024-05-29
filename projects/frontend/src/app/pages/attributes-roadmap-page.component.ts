@@ -209,8 +209,8 @@ export class AttributesRoadmapPageComponent {
           if (!chat) return EMPTY;
 
           const userPrompt = getAttributesRoadmapAssistUserPrompt(chat.controlForm);
-          if (userPrompt === null) {
-            this.snackbar.open('Please provide "General Process Category", "Objective", "Control Type", "IPC", "Frequency", and "Description" in the control form first.', 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+          if (!userPrompt.success) {
+            this.snackbar.open(userPrompt.message, 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
             return EMPTY;
           }
 
@@ -231,7 +231,7 @@ export class AttributesRoadmapPageComponent {
             of({
               ...state(),
               buffer: {
-                userPrompt: userPrompt,
+                userPrompt: userPrompt.message,
                 modelResponse: '',
               },
             } satisfies typeof this.initialState).pipe(
@@ -244,14 +244,14 @@ export class AttributesRoadmapPageComponent {
             ),
             this.textStreamService.requestTextStream$(
               `/chat/${chat.chatId}/prompt`,
-              { userPrompt, systemPrompt, configId: activeConfig.id }
+              { userPrompt: userPrompt.message, systemPrompt, configId: activeConfig.id }
             ).pipe(
               scan((acc, textChunk) => acc + textChunk, ''),
               map((modelResponse) => {
                 return {
                   ...state(),
                   buffer: {
-                    userPrompt: userPrompt,
+                    userPrompt: userPrompt.message,
                     modelResponse: modelResponse,
                   },
                 } satisfies typeof this.initialState;
@@ -404,8 +404,18 @@ ${attributesRoadmapAssistExamples}`;
 const getAttributesRoadmapAssistUserPrompt = (
   f: ControlSchemaV1['value']['form'],
 ) => {
-  if (!f.generalProcessCategory || !f.objective || !f.type || !f.ipc || !f.frequency || !f.description) {
-    return null;
+  if (!f.generalProcessCategory || !f.objective || !f.type || !f.frequency || !f.description) {
+    return {
+      success: false,
+      message: 'Please provide "General Process Category", "Objective", "Control Type", "Frequency", and "Description" in the control form first.'
+    };
+  }
+
+  if (f.type === 'itdm' && !f.ipc) {
+    return {
+      success: false,
+      message: 'Control type is ITDM, but IPC is missing.'
+    }
   }
 
   const userPrompt = `Task:
@@ -426,5 +436,8 @@ ${!!f.investigationProcess ? `Investigation and resolution procedures: ${f.inves
 Control Description:
 ${f.description}`;
 
-  return userPrompt;
+  return {
+    success: true,
+    message: userPrompt,
+  };
 };
