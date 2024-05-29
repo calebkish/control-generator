@@ -43,6 +43,7 @@ import { SettingsService } from '../services/settings.service';
   <div class="flex gap-6 overflow-auto h-full">
     <div class="flex-1 flex flex-col gap-4">
       <app-textarea-field
+        class="overflow-auto"
         label="Description"
         [ctrl]="form.controls.description"
       />

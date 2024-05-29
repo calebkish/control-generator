@@ -5,9 +5,10 @@ import { AppComponent } from './app/app.component';
 declare global {
   interface Window {
     ipc?: {
+      /** Will always return a promise */
       invoke: (channel: string, ...args: any[]) => Promise<any>;
-      on: (channel: string, handler: (...args: any[]) => Promise<any>) => () => void;
-      foo: () => any;
+      /** Returns a callback function to cleanup the event listener */
+      on: (channel: string, handler: (...args: any[]) => any) => () => void;
     }
   }
 }

@@ -79,6 +79,36 @@ function createWindow() {
     show: false,
   });
 
+  electronUpdater.autoUpdater.on('error', (error) => {
+    console.log('[ELECTRON UPDATER]', error.name, error.message, error.stack);
+    mainWindow.webContents.send('electron-updater-error', error.name, error.message, error.stack);
+  });
+  electronUpdater.autoUpdater.on('checking-for-update', () => {
+    console.log('[ELECTRON UPDATER]', 'checking for update');
+    mainWindow.webContents.send('electron-updater-checking-for-update');
+  });
+  electronUpdater.autoUpdater.on('update-available', (info) => {
+    console.log('[ELECTRON UPDATER]', 'update available');
+    mainWindow.webContents.send('electron-updater-update-available');
+  });
+  electronUpdater.autoUpdater.on('update-not-available', (info) => {
+    console.log('[ELECTRON UPDATER]', 'update not available');
+    mainWindow.webContents.send('electron-updater-update-not-availabe');
+  });
+  electronUpdater.autoUpdater.on('update-downloaded', (downloadEvent) => {
+    console.log('[ELECTRON UPDATER]', 'update-downloaded');
+    mainWindow.webContents.send('electron-updater-update-downloaded');
+  });
+  electronUpdater.autoUpdater.on('download-progress', (progress) => {
+    console.log('[ELECTRON UPDATER]', `download progress ${progress.percent}`);
+    mainWindow.webContents.send('electron-updater-download-progress', progress.percent);
+  });
+
+  electronUpdater.autoUpdater.on('update-cancelled', (info) => {
+    console.log('[ELECTRON UPDATER]', 'update canceled');
+    mainWindow.webContents.send('electron-updater-update-cancelled');
+  });
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.focus();
@@ -100,49 +130,20 @@ function setupIpcHandlersAndListeners(apiPort: number) {
   ipcMain.handle('quit-and-install', async () => {
     console.log('[ELECTRON UPDATER]', 'Invoking quit-and-install');
     electronUpdater.autoUpdater.quitAndInstall();
+
+    // just return something so that electron doesn't complain
+    return null;
   });
 
   ipcMain.handle('check-for-updates', async () => {
     console.log('[ELECTRON UPDATER]', 'Invoking check-for-updates');
     // If update is available, download will automatically start (electronUpdater.autoUpdater.autoDownload).
-    const updateCheckResult = await electronUpdater.autoUpdater.checkForUpdates();
-    return updateCheckResult;
+    await electronUpdater.autoUpdater.checkForUpdates();
+
+    // just return something so that electron doesn't complain
+    return null;
   });
 
-  electronUpdater.autoUpdater.on('error', (error) => {
-    console.log('[ELECTRON UPDATER]', error);
-    ipcMain.emit('electron-updater-error', error);
-  });
-
-  electronUpdater.autoUpdater.on('checking-for-update', () => {
-    console.log('[ELECTRON UPDATER]', 'checking for update');
-    ipcMain.emit('electron-updater-checking-for-update');
-  });
-
-  electronUpdater.autoUpdater.on('update-available', (info) => {
-    console.log('[ELECTRON UPDATER]', 'update available');
-    ipcMain.emit('electron-updater-update-available', info);
-  });
-
-  electronUpdater.autoUpdater.on('update-not-available', (info) => {
-    console.log('[ELECTRON UPDATER]', 'update not available');
-    ipcMain.emit('electron-updater-update-not-availabe', info);
-  });
-
-  electronUpdater.autoUpdater.on('update-downloaded', (downloadEvent) => {
-    console.log('[ELECTRON UPDATER]', 'update-downloaded');
-    ipcMain.emit('electron-updater-update-downloaded', downloadEvent);
-  });
-
-  electronUpdater.autoUpdater.on('download-progress', (progress) => {
-    console.log('[ELECTRON UPDATER]', `download progress ${progress.percent}`);
-    ipcMain.emit('electron-updater-download-progress', progress);
-  });
-
-  electronUpdater.autoUpdater.on('update-cancelled', (info) => {
-    console.log('[ELECTRON UPDATER]', 'update canceled');
-    ipcMain.emit('electron-updater-update-cancelled', info);
-  });
 }
 
 

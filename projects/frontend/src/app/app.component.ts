@@ -64,17 +64,29 @@ export class AppComponent implements OnInit {
   private snackbar = inject(MatSnackBar);
 
   async ngOnInit() {
-    window.ipc?.on('electron-updater-update-downloaded', async () => {
+    window.ipc?.on('electron-updater-update-downloaded', () => {
+      console.log('update-downloaded')
       this.snackbar.openFromComponent(RestartSnackComponent, { duration: 10000 });
     });
 
-    window.ipc?.on('download-progress', async (progress) => {
-      console.log('progress:', progress);
+    window.ipc?.on('electron-updater-download-progress', (progress) => {
+      console.log('download-progress:', progress);
     });
 
-    const updateCheckResult = await window.ipc?.invoke('check-for-updates');
-    if (updateCheckResult) {
+    window.ipc?.on('electron-updater-checking-for-update', () => {
+      console.log('checking-for-update');
+    });
+
+    window.ipc?.on('electron-updater-update-not-availabe', () => {
+      console.log('update-not-available');
+    });
+
+    window.ipc?.on('electron-updater-update-available', () => {
+      console.log('update-available');
       this.snackbar.open('A new update is available! Please keep the application open while it\'s downloaded.', 'Dismiss', { duration: 10000 });
-    }
+    });
+
+
+    await window.ipc?.invoke('check-for-updates');
   }
 }
