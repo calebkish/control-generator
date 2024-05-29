@@ -3,6 +3,8 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatButton, MatButtonModule } from '@angular/material/button';
 import { AsyncPipe } from '@angular/common';
 import { MatSnackBar, MatSnackBarAction, MatSnackBarActions, MatSnackBarLabel, MatSnackBarRef } from '@angular/material/snack-bar';
+import { SettingsService, latestTos } from './services/settings.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'restart-snack',
@@ -49,19 +51,34 @@ export class RestartSnackComponent {
   ],
   template: `
 <div class="flex w-full h-full">
-  <div class="p-3 bg-violet-200 h-full flex flex-col gap-2">
-    <a mat-button routerLink='controls'>Controls</a>
-    <a mat-button routerLink='settings'>Settings</a>
-    <!-- <a mat-button routerLink='transcribe'>Transcribe</a> -->
-  </div>
-  <div class="p-3 w-full h-full overflow-auto">
-    <router-outlet />
-  </div>
+  @if (hasAcceptedTermsOfService()) {
+    <div class="p-3 bg-violet-200 h-full flex flex-col gap-2">
+      <a mat-button routerLink='controls'>Controls</a>
+      <a mat-button routerLink='settings'>Settings</a>
+      <!-- <a mat-button routerLink='transcribe'>Transcribe</a> -->
+    </div>
+    <div class="p-3 w-full h-full overflow-auto">
+      <router-outlet />
+    </div>
+  } @else {
+    <div class="p-6 h-full w-full flex flex-col gap-2">
+      <div class="whitespace-pre-wrap overflow-auto">{{ latestTos }}</div>
+      <button type="button" class="flex-shrink-0" mat-flat-button (click)="acceptTos()">Accept Terms of Service</button>
+    </div>
+  }
 </div>
   `,
 })
 export class AppComponent implements OnInit {
-  private snackbar = inject(MatSnackBar);
+  private readonly snackbar = inject(MatSnackBar);
+  private readonly settingsService = inject(SettingsService);
+
+  hasAcceptedTermsOfService = toSignal(this.settingsService.hasAcceptedTermsOfSerivce$, { initialValue: true });
+  latestTos = latestTos.tos;
+
+  acceptTos() {
+    this.settingsService.acceptTos$.next();
+  }
 
   async ngOnInit() {
     window.ipc?.on('electron-updater-update-downloaded', () => {
@@ -90,3 +107,4 @@ export class AppComponent implements OnInit {
     await window.ipc?.invoke('check-for-updates');
   }
 }
+

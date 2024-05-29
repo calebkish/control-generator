@@ -1,8 +1,6 @@
 {
-  "version": "5",
+  "version": "6",
   "dialect": "sqlite",
-  "id": "a706d396-2aa5-4088-9f9c-c25ebc1f6b2a",
-  "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chats": {
       "name": "chats",
@@ -109,28 +107,28 @@
         "controls_to_chats_control_id_controls_id_fk": {
           "name": "controls_to_chats_control_id_controls_id_fk",
           "tableFrom": "controls_to_chats",
-          "tableTo": "controls",
           "columnsFrom": [
             "control_id"
           ],
+          "tableTo": "controls",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "controls_to_chats_chat_id_chats_id_fk": {
           "name": "controls_to_chats_chat_id_chats_id_fk",
           "tableFrom": "controls_to_chats",
-          "tableTo": "chats",
           "columnsFrom": [
             "chat_id"
           ],
+          "tableTo": "chats",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {
@@ -147,8 +145,9 @@
   },
   "enums": {},
   "_meta": {
-    "schemas": {},
     "tables": {},
     "columns": {}
-  }
+  },
+  "id": "a706d396-2aa5-4088-9f9c-c25ebc1f6b2a",
+  "prevId": "00000000-0000-0000-0000-000000000000"
 }

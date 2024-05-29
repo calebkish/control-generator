@@ -1,6 +1,11 @@
 import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm';
 import { uniqueIndex, integer, primaryKey, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 import { ChatHistoryItem } from 'node-llama-cpp';
+import { createId } from '@paralleldrive/cuid2';
+
+/**
+ * `Date`s can not be saved in JSON fields.
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -155,6 +160,61 @@ export const llmConfigsTable = sqliteTable('llm_configs',
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface BaseUserSchema {
+  schemaVersion: number;
+  value: {
+    settings: {
+      termsOfServiceAcceptedOn?: string;
+    }
+  };
+};
+
+export interface UserSchemaV1 extends BaseUserSchema {
+  schemaVersion: 1;
+}
+
+export enum Role {
+  User = 'USER',
+  Admin = 'ADMIN',
+}
+
+export const usersTable = sqliteTable('users',
+  {
+    id: integer('id')
+      .primaryKey(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .$default(() => new Date())
+      .notNull(),
+    document: text('value', { mode: 'json' })
+      .$type<UserSchemaV1>()
+      .notNull(),
+    publicId: text('public_id')
+      .notNull()
+      .$default(() => createId()),
+    email: text('email')
+      .notNull()
+      .unique(),
+    passwordHash: text('password_hash')
+      .notNull(),
+    role: text('role', { enum: (Object.values(Role) as [string, ...string[]]) })
+      .default(Role.User)
+      .notNull(),
+    isEmailVerified: integer('is_email_verified', { mode: 'boolean' })
+      .default(false)
+      .notNull(),
+    emailVerificationCode: text('email_verification_code'),
+    emailVerificationCodeExpiry: integer('email_verification_code_expiry', { mode: 'timestamp' }),
+  },
+  (table) => {
+    return {
+      publicIdIdx: uniqueIndex('users_public_id_idx').on(table.publicId),
+      emailIdx: uniqueIndex('users_email_idx').on(table.email),
+    };
+  }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type Control = InferSelectModel<typeof controlsTable>;
 export type ControlInsertModel = InferInsertModel<typeof controlsTable>;
 
@@ -166,3 +226,5 @@ export type ControlsToChatsInsertModel = InferInsertModel<typeof controlsToChats
 
 export type LlmConfig = InferSelectModel<typeof llmConfigsTable>;
 export type LLmConfigInsertModel = InferInsertModel<typeof llmConfigsTable>;
+
+export type User = InferSelectModel<typeof usersTable>;

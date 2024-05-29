@@ -15,6 +15,13 @@
       "when": 1716000515440,
       "tag": "0001_amused_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1717020584668,
+      "tag": "0002_lucky_killraven",
+      "breakpoints": true
     }
   ]
 }

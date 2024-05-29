@@ -9,6 +9,7 @@ export {
   LlmConfigOption,
   LlmConfigType,
   LlmConfig,
+  User,
 } from '../db/schema.js';
 
 export { ChatHistoryItem } from 'node-llama-cpp';
