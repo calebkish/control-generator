@@ -18,6 +18,7 @@ import { MatDivider } from '@angular/material/divider';
 import { glossary } from '../util/glossary';
 import { ArrayFieldComponent } from '../components/controls/array-field.component';
 import { SettingsService } from '../services/settings.service';
+import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-attributes-page',
@@ -61,10 +62,12 @@ import { SettingsService } from '../services/settings.service';
 
     <div class="flex-1 flex flex-col h-full">
       <div class="flex">
-        <button type="button" mat-button (click)="state.viewSystemPrompt()" class="w-full" [disabled]="state.buffer()">
-          <mat-icon>visibility</mat-icon>
-          View system prompt
-        </button>
+        @if (shouldAllowReadWriteSystemPrompt) {
+          <button type="button" mat-button (click)="state.viewSystemPrompt()" class="w-full" [disabled]="state.buffer()">
+            <mat-icon>visibility</mat-icon>
+            View system prompt
+          </button>
+        }
         <button type="button" mat-button (click)="state.clearHistory()" class="w-full button-error" [disabled]="state.buffer()">
           <mat-icon>delete_sweep</mat-icon>
           Clear history
@@ -170,6 +173,8 @@ export class AttributesPageComponent {
   private dialog = inject(MatDialog);
   private injector = inject(Injector);
   private settingsService = inject(SettingsService);
+
+  shouldAllowReadWriteSystemPrompt = environment.stage === 'development';
 
   private scrollingElement = viewChild.required('scrollingElement', { read: ElementRef<HTMLElement> });
   private userInputField = viewChild.required('userInput', { read: TextAreaFieldComponent });

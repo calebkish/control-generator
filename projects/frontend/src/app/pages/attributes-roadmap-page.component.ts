@@ -17,6 +17,7 @@ import { RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
 import { glossary } from '../util/glossary';
 import { SettingsService } from '../services/settings.service';
+import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-attributes-roadmap-page',
@@ -57,10 +58,12 @@ import { SettingsService } from '../services/settings.service';
 
     <div class="flex-1 flex flex-col h-full">
       <div class="flex">
-        <button type="button" mat-button (click)="editSystemPrompt$.next()" class="w-full" [disabled]="state.buffer()">
-          <mat-icon>edit</mat-icon>
-          Edit system prompt
-        </button>
+        @if (shouldAllowReadWriteSystemPrompt) {
+          <button type="button" mat-button (click)="editSystemPrompt$.next()" class="w-full" [disabled]="state.buffer()">
+            <mat-icon>edit</mat-icon>
+            Edit system prompt
+          </button>
+        }
         <button type="button" mat-button (click)="state.clearHistory()" class="w-full button-error" [disabled]="state.buffer()">
           <mat-icon>delete_sweep</mat-icon>
           Clear history
@@ -156,6 +159,8 @@ export class AttributesRoadmapPageComponent {
 
   private scrollingElement = viewChild.required('scrollingElement', { read: ElementRef<HTMLElement> });
   private attributesRoadmapField = viewChild.required(TextAreaFieldComponent);
+
+  shouldAllowReadWriteSystemPrompt = environment.stage === 'development';
 
   controlId = input.required<number, string>({ transform: (val) => parseInt(val) });
 
