@@ -1,91 +1,231 @@
-<div class="w-full max-w-4xl h-full mx-auto flex flex-col gap-4 overflow-auto">
-  <div class="flex-0 text-2xl font-bold mt-1">Edit Control</div>
+<app-tips-and-tricks-sidenav>
 
-  <div class="flex gap-6 h-full overflow-auto">
-    <div class="flex flex-col gap-4 h-full overflow-auto flex-1">
-      <div class="flex flex-col gap-4 overflow-auto flex-shrink-1 flex-grow-1">
-        <app-text-field
-          label="Control Name"
-          [ctrl]="form.controls.name"
-        />
+  <div class="w-full max-w-4xl h-full mx-auto flex flex-col gap-4 overflow-auto p-3">
+    <details open>
+      <summary class="chevron">
+        <div class="text-2xl font-bold mt-1 inline">Edit Control</div>
+      </summary>
+      <div class="mb-8 text-sm leading-7">
+        Use this form to document control characteristics. Answers within are meant to be short and to the point. Detail noted within will be leveraged by the AI Controller to write attributes in addition to using a Detailed Description (step 1) and Attribute Roadmap (step 2). Once this information is completed, the AI Controller will have all necessary information to create design attributes (step 3).
+      </div>
+    </details>
 
-        <app-text-field
-          label="General Process Category"
-          [ctrl]="form.controls.gpc"
-        />
+    <div class="flex gap-6 h-full overflow-auto">
+      <div class="flex flex-col gap-4 h-full overflow-auto flex-1">
+        <div class="flex flex-col gap-8 overflow-auto flex-shrink-1 flex-grow-1">
 
-        <app-select-field
-          label="Control Type"
-          [ctrl]="form.controls.controlType"
-          [options]="controlTypeOptions"
-        />
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Control Name</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                e.g. REV-03, INV-01
+              </div>
+            </details>
+            <app-text-field
+              [ctrl]="form.controls.name"
+            />
+          </div>
 
-        <app-select-field
-          label="Frequency"
-          [ctrl]="form.controls.frequency"
-          [options]="frequencyOptions"
-        />
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">General Process Category</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                What broad business operation does this control fit into?
+                <br><br>
+                e.g. Order to Cash, Purchase to Pay, Financial Statement Close Process
+              </div>
+            </details>
+            <app-text-field
+              [ctrl]="form.controls.gpc"
+            />
+          </div>
 
-        <app-textarea-field
-          label="Objective"
-          [ctrl]="form.controls.objective"
-        />
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Nature of Control</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                Is this control performed without the use of technology (Manual) or from system functionality with operator intervention (information technology dependent manual [ITDM])?
+              </div>
+            </details>
+            <app-select-field
+              [ctrl]="form.controls.controlType"
+              [options]="controlTypeOptions"
+            />
+          </div>
 
-        <app-textarea-field
-          label="IPC"
-          [ctrl]="form.controls.ipc"
-          hint="Information used in the Performance of the Control. Leave empty if not applicable."
-        />
+          @if (shouldShowIpc$ | async) {
+            <div class="flex flex-col gap-1">
+              <details>
+                <summary class="chevron">
+                  <div class="text-lg inline">IPC</div>
+                </summary>
+                <div class="text-xs text-gray-700">
+                  What information does the control operator perform procedures over as a part of the control? These may include system reports, manually prepared spreadsheets, and system queries. For each piece of IPC, write a short description of what it is and how it is generated.
+                  <br><br>
+                  e.g. FBL9N: system generated report from 'ERP system' listing the YTD AR aging.
+                </div>
+              </details>
+              <div class="text-xs text-gray-700">
+              </div>
+              <app-textarea-field
+                [ctrl]="form.controls.ipc"
+              />
+            </div>
+          }
 
-        <app-textarea-field
-          label="Judgement/Complexity Involved"
-          [ctrl]="form.controls.judgementComplexityInvolved"
-          hint="Leave empty if not applicable."
-        />
 
-        <app-textarea-field
-          label="Quantitative Thresholds"
-          [ctrl]="form.controls.quantitativeThresholds"
-          hint="Leave empty if not applicable."
-        />
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Frequency</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                How often is this control performed?
+              </div>
+            </details>
+            <app-select-field
+              [ctrl]="form.controls.frequency"
+              [options]="frequencyOptions"
+            />
+          </div>
 
-        <app-textarea-field
-          label="Qualitative Thresholds"
-          [ctrl]="form.controls.qualitativeThresholds"
-          hint="Leave empty if not applicable."
-        />
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Objective</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                What does this control aim to achieve as a result of operation? Keep within 1 - 2 sentences.
+                <br><br>
+                e.g. Monthly, the control operator will review and approve manual journal entries prior to posting in ERP system.
+              </div>
+            </details>
+            <app-textarea-field
+              [ctrl]="form.controls.objective"
+            />
+          </div>
 
-        <app-textarea-field
-          label="Investigation and Resolution Process"
-          [ctrl]="form.controls.investigationProcess"
-          hint="Leave empty if not applicable."
-        />
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Judgement/Complexity Involved</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                Is subjectivity required by the control operator to determine the reasonableness of outliers or judgement that requires specific knowledge/understanding?
+              </div>
+            </details>
+            <app-textarea-field
+              [ctrl]="form.controls.judgementComplexityInvolved"
+              hint="Leave empty if not applicable."
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Quantitative Thresholds</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                What numeric thresholds are used for investigation or to identify outliers? For each threshold, type in the amount and a short description of what it is used for.
+                <br><br>
+                e.g. $50: to determine whether the reconciliation variance requires investigation.
+              </div>
+            </details>
+            <app-textarea-field
+              [ctrl]="form.controls.quantitativeThresholds"
+              hint="Leave empty if not applicable."
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Qualitative Thresholds</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                What non-numeric thresholds are used by the control operator for investigation or to identify outliers? Provide a short description of each threshold used.
+                <br><br>
+                e.g. Meeting minutes are reviewed by the control operator for litigation concerns.
+              </div>
+            </details>
+            <app-textarea-field
+              [ctrl]="form.controls.qualitativeThresholds"
+              hint="Leave empty if not applicable."
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <details>
+              <summary class="chevron">
+                <div class="text-lg inline">Investigation and Resolution Process</div>
+              </summary>
+              <div class="text-xs text-gray-700">
+                What steps does the control operator take to investigate and resolve outliers/errors identified in operation of the control?
+              </div>
+            </details>
+            <app-textarea-field
+              [ctrl]="form.controls.investigationProcess"
+              hint="Leave empty if not applicable."
+            />
+          </div>
+        </div>
+
+        <button type="button" mat-flat-button (click)="onSubmit$.next()" class="flex-shrink-0">
+          <mat-icon>save</mat-icon>
+          Save
+        </button>
+
+        <mat-divider />
+
+        <div class="flex justify-around mb-1">
+          <a mat-raised-button (click)="onNavigate('description')" [disabled]="!editDescriptionAllowed().allowed" [matTooltip]="editDescriptionAllowed().message ?? ''">
+            <div class="flex gap-2 items-center">
+              <div class="text-lg font-bold">1</div>
+              Detailed Description
+            </div>
+          </a>
+          <a mat-raised-button (click)="onNavigate('attributes-roadmap')" [disabled]="!attributesRoadmapAllowed().allowed" [matTooltip]="attributesRoadmapAllowed().message ?? ''">
+            <div class="flex gap-2 items-center">
+              <div class="text-lg font-bold">2</div>
+              Attributes Roadmap
+            </div>
+          </a>
+          <a mat-raised-button (click)="onNavigate('attributes')" [disabled]="!controlDesignerAllowed().allowed">
+            <div class="flex gap-2 items-center">
+              <div class="text-lg font-bold">3</div>
+              Control Designer
+            </div>
+          </a>
+        </div>
       </div>
 
-      <button type="button" mat-flat-button (click)="onSubmit$.next()" class="flex-shrink-0">
-        <mat-icon>save</mat-icon>
-        Save
-      </button>
-    </div>
+      <!-- <mat-divider [vertical]="true" /> -->
 
-    <mat-divider [vertical]="true" />
-
-    <div class="flex flex-col gap-8">
-      <!-- <a mat-raised-button [routerLink]="['description']"> -->
-      <a mat-raised-button (click)="onNavigate('description')">
-        <mat-icon>description</mat-icon>
-        Edit description
-      </a>
-      <!-- <a mat-raised-button [routerLink]="['attributes-roadmap']"> -->
-      <a mat-raised-button (click)="onNavigate('attributes-roadmap')">
-        <mat-icon>edit_road</mat-icon>
-        Attributes roadmap
-      </a>
-      <!-- <a mat-raised-button [routerLink]="['attributes']"> -->
-      <a mat-raised-button (click)="onNavigate('attributes')">
-        <mat-icon>list</mat-icon>
-        Edit Attributes
-      </a>
     </div>
   </div>
-</div>
+
+  <ng-container items>
+    <li>
+      Write in the same professional manner you would to a reasonably competent coworker not familiar with the control. This could mean spelling out acronyms or describing niche topics.
+    </li>
+    <li>
+      When making multiple points in a section (e.g. multiple pieces of IPC), use bullet points or numbers to differentiate between them. The AI Controller reads in the same manner as we do, so clearly splitting out information greatly helps comprehension.
+    </li>
+    <li>
+      ITDM controls by nature have IPC. Think of what reports the user creates from scratch or generates from a system in order to perform control procedures.
+    </li>
+    <li>
+      Controls that require professional judgement/thresholds/investigation may require more information to get accurate attributes. You can be brief here and always provide more information in the Detailed Description step. In that step, the AI Controller will ask clarifying questions for a better understanding if needed.
+    </li>
+    <li>
+      Each part of the form contains descriptive information and examples. Read each section to help you answer accurately and concisely.
+    </li>
+  </ng-container>
+
+</app-tips-and-tricks-sidenav>

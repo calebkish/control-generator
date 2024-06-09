@@ -18,7 +18,9 @@ import { AsyncPipe } from '@angular/common';
   ],
   template: `
 <mat-form-field [subscriptSizing]="subscriptSizing()" class="w-full">
-  <mat-label>{{ label() }}</mat-label>
+  @if (label()) {
+    <mat-label>{{ label() }}</mat-label>
+  }
   <input
     matInput
     [formControl]="ctrl()"
@@ -36,7 +38,7 @@ import { AsyncPipe } from '@angular/common';
 export class TextFieldComponent {
   private matInput = viewChild.required(MatInput);
 
-  label = input.required<string>();
+  label = input<string>();
   disabled = input<boolean>(false);
   hint = input<string | null>(null);
   subscriptSizing = input<SubscriptSizing>('dynamic');

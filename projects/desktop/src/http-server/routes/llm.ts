@@ -356,6 +356,11 @@ const localLlamaOptionTemplates: { option: LlmConfigLocalLlamaOption, fileName: 
     fileName: 'Meta-Llama-3-8B-Instruct-Q8_0.gguf',
     downloadUrl: 'https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q8_0.gguf',
   },
+  // {
+  //   option: 'Qwen 2 1.5B Instract Q8 0',
+  //   fileName: 'qwen2-1.5b-instruct.Q8_0.gguf',
+  //   downloadUrl: 'https://huggingface.co/afrideva/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1.5b-instruct.Q8_0.gguf'
+  // },
 ];
 
 const azureOpenAiOptionTemplates: { option: LlmConfigAzureOpenAiOption }[] = [

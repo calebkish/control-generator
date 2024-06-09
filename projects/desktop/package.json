@@ -1,6 +1,6 @@
 {
   "name": "control-generator",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "Control generator",
   "author": "Caleb Kish",
   "license": "ISC",
@@ -51,7 +51,7 @@
     "drizzle-orm": "^0.30.6",
     "electron-updater": "^6.1.8",
     "hono": "^4.1.5",
-    "node-llama-cpp": "^3.0.0-beta.19",
+    "node-llama-cpp": "^3.0.0-beta.22",
     "rxjs": "^7.8.1",
     "zod": "^3.22.4"
   }

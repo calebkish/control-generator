@@ -115,7 +115,7 @@ export const controlsToChatsRelations = relations(controlsToChatsTable, ({ one }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const llmConfigLocalLlamaOptions = ['Llama 3 8B Instruct Q2 K', 'Llama 3 8B Instruct Q8 0'] as const;
+export const llmConfigLocalLlamaOptions = ['Llama 3 8B Instruct Q2 K', 'Llama 3 8B Instruct Q8 0', 'Qwen 2 1.5B Instract Q8 0'] as const;
 export type LlmConfigLocalLlamaOption = typeof llmConfigLocalLlamaOptions[number];
 export const llmConfigAzureOpenAiOptions = ['Azure OpenAI ChatGPT 4'] as const;
 export type LlmConfigAzureOpenAiOption = typeof llmConfigAzureOpenAiOptions[number];

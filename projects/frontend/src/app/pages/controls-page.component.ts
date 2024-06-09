@@ -1,5 +1,5 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, inject, viewChild } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatButtonModule, MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HttpControlsService } from '../services/http-controls.service';
@@ -9,7 +9,6 @@ import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AsyncPipe } from '@angular/common';
-import { Control } from '@http';
 import { ControlFormPageComponent } from './control-form-page.component';
 
 @Component({
@@ -26,10 +25,16 @@ import { ControlFormPageComponent } from './control-form-page.component';
     MatIconButton,
   ],
   template: `
-<div class="w-full max-w-3xl h-full mx-auto flex flex-col gap-3">
+<div class="w-full max-w-3xl h-full mx-auto flex flex-col gap-3 p-3">
 
   <div class="flex gap-2 justify-center">
-    <app-text-field label="Name" [ctrl]="nameCtrl" class="w-72" subscriptSizing="fixed" />
+    <app-text-field
+      label="Name"
+      [ctrl]="nameCtrl"
+      class="w-72"
+      subscriptSizing="fixed"
+      hint="e.g. REV-03, INV-01"
+    />
     <button mat-flat-button (click)="addControl$.next()" class="mt-1">
       <mat-icon>add</mat-icon>
       Create a control

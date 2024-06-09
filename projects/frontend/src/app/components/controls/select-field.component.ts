@@ -21,7 +21,9 @@ export type SelectOption<T> = {
   ],
   template: `
 <mat-form-field subscriptSizing="dynamic" class="w-full">
-  <mat-label>{{ label() }}</mat-label>
+  @if (label()) {
+    <mat-label>{{ label() }}</mat-label>
+  }
   <mat-select [formControl]="ctrl()" [disabled]="disabled()">
     @for (option of options(); track option.value) {
       <mat-option [value]="option.value">{{ option.label }}</mat-option>
@@ -39,7 +41,7 @@ export type SelectOption<T> = {
 export class SelectFieldComponent<T> {
   options = input.required<SelectOption<T>[]>();
 
-  label = input.required<string>();
+  label = input<string>();
   disabled = input<boolean>(false);
   hint = input<string | null>(null);
 

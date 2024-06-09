@@ -54,7 +54,6 @@ export class ArrayFieldComponent<T> {
 
   arrayCtrl = input.required<FormArray<FormControl<T>>>();
   defaultValue = input.required<T>();
-  label = input.required<string>();
   rows = input<number>(10);
 
   arrayControls = computed(() => {
@@ -70,18 +69,18 @@ export class ArrayFieldComponent<T> {
       takeUntilDestroyed(),
     ).subscribe(() => {
       const newControl = this.fb.control<T>(this.defaultValue());
-      this.arrayCtrl().push(newControl);
+      this.arrayCtrl().push(newControl, { emitEvent: false });
     });
 
     this.controlArrayRemove$.pipe(
       takeUntilDestroyed(),
     ).subscribe((i) => {
-      this.arrayCtrl().removeAt(i);
+      this.arrayCtrl().removeAt(i, { emitEvent: false });
     });
   }
 
   add(value?: T) {
     const newControl = this.fb.control<T>(value ?? this.defaultValue());
-    this.arrayCtrl().push(newControl);
+    this.arrayCtrl().push(newControl, { emitEvent: false });
   }
 }

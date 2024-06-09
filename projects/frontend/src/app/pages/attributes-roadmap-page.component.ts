@@ -1,4 +1,4 @@
-import { AfterRenderPhase, Component, DestroyRef, ElementRef, Injector, afterNextRender, inject, input, viewChild } from '@angular/core';
+import { AfterRenderPhase, Component, DestroyRef, ElementRef, Injector, afterNextRender, inject, input, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -6,18 +6,19 @@ import { MatAnchor, MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, map, of, scan, switchMap, takeUntil, tap } from 'rxjs';
+import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, map, of, scan, skip, switchMap, takeUntil, tap } from 'rxjs';
 import { signalSlice } from 'ngxtension/signal-slice';
 import { ConfigVm, ControlChatResponse, ControlSchemaV1, LlmConfigOptionResponse } from '@http';
 import { TextAreaFieldComponent } from '../components/controls/textarea-field.component';
 import { SystemPromptDialogComponent } from '../components/system-prompt-dialog.component';
 import { TextStreamService } from '../services/text-stream.service';
 import { HttpControlsService } from '../services/http-controls.service';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
 import { glossary } from '../util/glossary';
 import { SettingsService } from '../services/settings.service';
 import { environment } from '../../environment/environment';
+import { TipsAndTricksSidenavComponent } from '../components/tips-and-track-sidenav.component';
 
 @Component({
   selector: 'app-attributes-roadmap-page',
@@ -30,110 +31,9 @@ import { environment } from '../../environment/environment';
     RouterLink,
     MatAnchor,
     MatDivider,
+    TipsAndTricksSidenavComponent,
   ],
-  template: `
-<div class="flex flex-col gap-6 p-6 h-full">
-  <div class="flex gap-5 items-center">
-    <a mat-button [routerLink]="['..']" class="flex-shrink-0 self-start">
-      <mat-icon>arrow_back</mat-icon>
-      Back to control form
-    </a>
-    <div class="flex-0 text-2xl font-bold">Attributes Roadmap</div>
-  </div>
-
-  <div class="flex gap-6 overflow-auto h-full">
-    <div class="flex-1 flex flex-col gap-4">
-      <app-textarea-field
-        label="Attributes roadmap"
-        [ctrl]="form.controls.attributesRoadmap"
-      />
-
-      <button mat-flat-button type="button" (click)="onSubmit$.next()" class="flex-shrink-0">
-        <mat-icon>save</mat-icon>
-        Save
-      </button>
-    </div>
-
-    <mat-divider [vertical]="true" class="flex-0" />
-
-    <div class="flex-1 flex flex-col h-full">
-      <div class="flex">
-        @if (shouldAllowReadWriteSystemPrompt) {
-          <button type="button" mat-button (click)="editSystemPrompt$.next()" class="w-full" [disabled]="state.buffer()">
-            <mat-icon>edit</mat-icon>
-            Edit system prompt
-          </button>
-        }
-        <button type="button" mat-button (click)="state.clearHistory()" class="w-full button-error" [disabled]="state.buffer()">
-          <mat-icon>delete_sweep</mat-icon>
-          Clear history
-        </button>
-      </div>
-
-      <div class="scrolling-element overflow-y-auto h-full" #scrollingElement>
-        <div class="flex flex-col gap-8">
-          @for (historyItem of state.history(); track historyItem) {
-            @if (historyItem.type === 'user') {
-              <div>
-                <div class="font-bold flex items-center gap-2">
-                  <mat-icon>person</mat-icon>
-                  You
-                </div>
-                <div class="whitespace-pre-wrap text-sm leading-6">{{ historyItem.text }}</div>
-              </div>
-            } @else if (historyItem.type === 'model') {
-              <div>
-                <div class="font-bold flex items-center gap-2">
-                  <mat-icon>psychology</mat-icon>
-                  AI
-                </div>
-                <div class="whitespace-pre-wrap text-sm leading-6">{{ historyItem.response[0] }}</div>
-              </div>
-            }
-          }
-          @if (state.buffer(); as buf) {
-            <div>
-              <div class="font-bold flex items-center gap-2">
-                <mat-icon>person</mat-icon>
-                You
-              </div>
-              <div style="white-space: pre-wrap">{{ buf.userPrompt }}</div>
-            </div>
-            <div>
-              <div class="font-bold flex items-center gap-2">
-                <mat-icon>psychology</mat-icon>
-                AI
-              </div>
-              @if (buf.modelResponse.length === 0) {
-                <mat-spinner [diameter]="16" />
-              } @else {
-                <div style="white-space: pre-wrap">{{ buf.modelResponse }}</div>
-              }
-            </div>
-          }
-        </div>
-        <div class="anchor flex-shrink-0"></div>
-      </div>
-
-      @if (state.buffer()) {
-        <button type="button" mat-flat-button class="w-full flex-shrink-0 button-error" (click)="cancel$.next()">
-          <mat-icon>cancel</mat-icon>
-          Cancel
-        </button>
-      } @else {
-        <button type="button" mat-flat-button class="w-full flex-shrink-0" (click)="state.critqueRequest()">
-          <mat-icon>emoji_objects</mat-icon>
-          AI Generate Attributes Roadmap
-        </button>
-    }
-
-    </div>
-  </div>
-
-
-
-</div>
-  `,
+  templateUrl: './attributes-roadmap-page.component.html',
   styles: `
 .scrolling-element {
   > *:not(.anchor) {
@@ -156,6 +56,8 @@ export class AttributesRoadmapPageComponent {
   private dialog = inject(MatDialog);
   private injector = inject(Injector);
   private settingsService = inject(SettingsService);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   private scrollingElement = viewChild.required('scrollingElement', { read: ElementRef<HTMLElement> });
   private attributesRoadmapField = viewChild.required(TextAreaFieldComponent);
@@ -167,6 +69,8 @@ export class AttributesRoadmapPageComponent {
   form = this.fb.group({
     attributesRoadmap: this.fb.control<string>('', [Validators.required, Validators.minLength(10)]),
   });
+
+  formDirty = signal(false);
 
   initialState: {
     activeConfig: ConfigVm | null,
@@ -330,6 +234,13 @@ export class AttributesRoadmapPageComponent {
   async ngOnInit() {
     this.state.onInit();
 
+    this.form.valueChanges.pipe(
+      skip(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.formDirty.set(true);
+    });
+
     // Handle editing system prompt.
     this.editSystemPrompt$
       .pipe(
@@ -371,11 +282,20 @@ export class AttributesRoadmapPageComponent {
 
       await firstValueFrom(this.controlsService.patchControlForm(this.controlId(), patch));
       this.snackbar.open('Saved!', 'Dismiss', { duration: 3000, verticalPosition: 'top' });
+      this.formDirty.set(false);
     });
   }
 
   scrollToBottom() {
     this.scrollingElement().nativeElement.scrollTop = this.scrollingElement().nativeElement.scrollHeight;
+  }
+
+  goBack() {
+    if (this.formDirty()) {
+      this.snackbar.open('Please save the attributes roadmap first', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+      return;
+    }
+    this.router.navigate(['..'], { relativeTo: this.activatedRoute });
   }
 }
 
@@ -409,18 +329,9 @@ ${attributesRoadmapAssistExamples}`;
 const getAttributesRoadmapAssistUserPrompt = (
   f: ControlSchemaV1['value']['form'],
 ) => {
-  if (!f.generalProcessCategory || !f.objective || !f.type || !f.frequency || !f.description) {
-    return {
-      success: false,
-      message: 'Please provide "General Process Category", "Objective", "Control Type", "Frequency", and "Description" in the control form first.'
-    };
-  }
-
-  if (f.type === 'itdm' && !f.ipc) {
-    return {
-      success: false,
-      message: 'Control type is ITDM, but IPC is missing.'
-    }
+  const errorMessage = validateFormForAttributesRoadmap(f);
+  if (errorMessage) {
+    return { success: false, message: errorMessage };
   }
 
   const userPrompt = `Task:
@@ -431,7 +342,7 @@ Name: ${f.name}
 General Process Category: ${f.generalProcessCategory}
 Objective: ${f.objective}
 Control type: ${f.type}
-IPC: ${f.ipc}
+${f.type === 'itdm' && !!f.ipc ? `IPC: ${f.ipc}` : ''}
 Frequency: ${f.frequency}
 ${!!f.judgement ? `Judgement/complexity: ${f.judgement}` : ''}
 ${!!f.quantitativeThesholds ? `Quantitative Thresholds: ${f.quantitativeThesholds}` : ''}
@@ -446,3 +357,31 @@ ${f.description}`;
     message: userPrompt,
   };
 };
+
+export function validateFormForAttributesRoadmap(
+  f: ControlSchemaV1['value']['form']
+) {
+  const invalidFields: string[] = [];
+
+  if (!f.generalProcessCategory) {
+    invalidFields.push('General Process Category');
+  }
+  if (!f.objective) {
+    invalidFields.push('Objective');
+  }
+  if (!f.type) {
+    invalidFields.push('Control Type');
+  }
+  if (!f.frequency) {
+    invalidFields.push('Frequency');
+  }
+  if (!f.description) {
+    invalidFields.push('Description');
+  }
+
+  if (invalidFields.length > 0) {
+    return `Needed fields: ${invalidFields.join(', ')}`;
+  }
+
+  return null;
+}

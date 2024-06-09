@@ -1,12 +1,12 @@
-import { Component, DestroyRef, inject, input, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
-import { Subject, firstValueFrom, skip } from 'rxjs';
+import { Subject, firstValueFrom, map, shareReplay, skip } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatAnchor, MatButtonModule } from '@angular/material/button';
+import { MatAnchor, MatButtonModule, MatMiniFabButton } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar'
 import { TextFieldComponent } from '../components/controls/text-field.component';
@@ -16,8 +16,14 @@ import { NumberFieldComponent } from '../components/controls/number-field.compon
 import { controlNameValidators } from './controls-page.component';
 import { HttpControlsService } from '../services/http-controls.service';
 import { ControlSchemaV1 } from '@http';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
+import { validateFormForDescription } from './control-description-page.component';
+import { AsyncPipe, JsonPipe } from '@angular/common';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { TipsAndTricksSidenavComponent } from '../components/tips-and-track-sidenav.component';
+import { validateFormForAttributesRoadmap } from './attributes-roadmap-page.component';
+import { validateFormForAttributesAssist } from './attributes-page.component';
 
 @Component({
   selector: 'app-control-form-page',
@@ -39,6 +45,11 @@ import { MatDivider } from '@angular/material/divider';
     MatAnchor,
     RouterLink,
     MatDivider,
+    JsonPipe,
+    AsyncPipe,
+    MatSidenavModule,
+    MatMiniFabButton,
+    TipsAndTricksSidenavComponent,
   ],
 })
 export class ControlFormPageComponent {
@@ -46,7 +57,6 @@ export class ControlFormPageComponent {
   private snackbar = inject(MatSnackBar);
   private controlsService = inject(HttpControlsService);
   private destroyRef = inject(DestroyRef);
-  private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
 
   controlId = input.required<number, string>({ transform: (val) => parseInt(val) });
@@ -62,6 +72,16 @@ export class ControlFormPageComponent {
     quantitativeThresholds: this.fb.control<string>(''), // yes/no
     qualitativeThresholds: this.fb.control<string>(''), // yes/no
     investigationProcess: this.fb.control<string>(''), // yes/no
+  }, {
+    validators: [
+      (control) => {
+        const value = control.getRawValue();
+        if (value.controlType === 'itdm' && !value.ipc) {
+          return { formError: 'Control type is ITDM. Please provide the IPC.' };
+        }
+        return null;
+      }
+    ]
   });
 
   controlTypeOptions: SelectOption<string>[] = [
@@ -119,6 +139,62 @@ export class ControlFormPageComponent {
 
   onSubmit$ = new Subject<void>();
 
+  shouldShowIpc$ = this.form.valueChanges.pipe(
+    map(value => value?.controlType === 'itdm'),
+    takeUntilDestroyed(),
+    shareReplay(1),
+  );
+
+  /** Used for whether to enable/disable buttons */
+  controlFormValue = signal<ControlSchemaV1['value']['form'] | null>(null);
+
+  editDescriptionAllowed = computed(() => {
+    const f = this.controlFormValue();
+    if (f === null) {
+      return { allowed: false };
+    }
+    const errorMessage = validateFormForDescription(f);
+    if (errorMessage) {
+      return {
+        allowed: false,
+        message: errorMessage,
+      };
+    }
+    return { allowed: true };
+  });
+
+  attributesRoadmapAllowed = computed(() => {
+    const f = this.controlFormValue();
+    if (f === null) {
+      return { allowed: false };
+    }
+    const errorMessage = validateFormForAttributesRoadmap(f);
+    if (errorMessage) {
+      return {
+        allowed: false,
+        message: errorMessage,
+      };
+    }
+    return { allowed: true };
+  });
+
+  controlDesignerAllowed = computed(() => {
+    const f = this.controlFormValue();
+    if (f === null) {
+      return { allowed: false };
+    }
+    const errorMessage = validateFormForAttributesAssist(f);
+    if (errorMessage) {
+      return {
+        allowed: false,
+        message: errorMessage,
+      };
+    }
+    return { allowed: true };
+  });
+
+
+
   onNavigate(subRoute: string) {
     if (this.formDirty()) {
       this.snackbar.open('Please save the form first', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
@@ -129,12 +205,13 @@ export class ControlFormPageComponent {
 
   formDirty = signal(false);
 
+  isSaving = signal(false);
+
   async ngOnInit() {
     this.form.valueChanges.pipe(
       skip(1),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
-      console.log('here');
       this.formDirty.set(true);
     });
 
@@ -142,26 +219,19 @@ export class ControlFormPageComponent {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(async () => {
       if (!this.form.valid) {
-        this.snackbar.open('Form is not valid', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+        const formError = this.form.errors?.['formError'];
+        const message = `Form is invalid: ${formError}` ?? 'Form is invalid';
+        this.snackbar.open(message, 'Dismiss', { duration: 5000, verticalPosition: 'top', panelClass: 'snackbar-error' });
         return;
       }
 
-      const formValue = this.form.getRawValue();
+      const patch = this.formViewModelToModel();
+      this.controlFormValue.update(v => ({
+        ...v,
+        ...patch
+      }));
 
-      const patch: ControlSchemaV1['value']['form'] = {
-        name: formValue.name,
-        qualitativeThresholds: formValue.qualitativeThresholds,
-        quantitativeThesholds: formValue.quantitativeThresholds,
-        ipc: formValue.ipc,
-        judgement: formValue.judgementComplexityInvolved,
-        frequency: formValue.frequency,
-        generalProcessCategory: formValue.gpc,
-        investigationProcess: formValue.investigationProcess,
-        objective: formValue.objective,
-        type: formValue.controlType,
-      };
-
-      await firstValueFrom(this.controlsService.patchControlForm(this.controlId(), patch));
+      this.saveForm();
       this.snackbar.open('Saved!', 'Dismiss', { duration: 3000, verticalPosition: 'top' });
       this.controlsService.fetchControlsRequest$.next();
       this.formDirty.set(false);
@@ -169,10 +239,9 @@ export class ControlFormPageComponent {
 
     const res = await firstValueFrom(this.controlsService.getControl(this.controlId()));
     const formValue = res.document.value.form;
+    this.controlFormValue.set(formValue);
     this.form.setValue({
       name: formValue.name,
-      // attributesRoadmap: formValue.attributeRoadmap ?? '',
-      // attributes: formValue.attributes ?? [],
       controlType: formValue.type ?? '',
       frequency: formValue.frequency ?? '',
       gpc: formValue.generalProcessCategory ?? '',
@@ -183,5 +252,29 @@ export class ControlFormPageComponent {
       qualitativeThresholds: formValue.qualitativeThresholds ?? '',
       quantitativeThresholds: formValue.quantitativeThesholds ?? '',
     });
+  }
+
+  private formViewModelToModel(): ControlSchemaV1['value']['form'] {
+    const formValue = this.form.getRawValue();
+    const patch: ControlSchemaV1['value']['form'] = {
+      name: formValue.name,
+      qualitativeThresholds: formValue.qualitativeThresholds,
+      quantitativeThesholds: formValue.quantitativeThresholds,
+      ipc: formValue.ipc,
+      judgement: formValue.judgementComplexityInvolved,
+      frequency: formValue.frequency,
+      generalProcessCategory: formValue.gpc,
+      investigationProcess: formValue.investigationProcess,
+      objective: formValue.objective,
+      type: formValue.controlType,
+    };
+    return patch;
+  }
+
+  private async saveForm() {
+    const patch = this.formViewModelToModel();
+    this.isSaving.set(true);
+    await firstValueFrom(this.controlsService.patchControlForm(this.controlId(), patch));
+    this.isSaving.set(false);
   }
 }

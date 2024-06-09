@@ -108,3 +108,24 @@ $error-theme: mat.define-theme((
 .fab-error {
   @include mat.fab-color($error-theme);
 }
+
+summary.chevron {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+summary.chevron::after {
+  content: '';
+  width: 18px;
+  height: 10px;
+  background: url('../public/arrow.svg');
+  background-size: cover;
+  margin-left: 0.5rem;
+  transition: 0.2s;
+  transform: rotateX(0deg) scale(0.8);
+}
+
+details[open] summary.chevron::after {
+  transform: rotateX(180deg) scale(0.8);
+}

@@ -1,44 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { MatButton, MatButtonModule } from '@angular/material/button';
+import { MatButtonModule } from '@angular/material/button';
 import { AsyncPipe } from '@angular/common';
-import { MatSnackBar, MatSnackBarAction, MatSnackBarActions, MatSnackBarLabel, MatSnackBarRef } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { SettingsService, latestTos } from './services/settings.service';
 import { toSignal } from '@angular/core/rxjs-interop';
-
-@Component({
-  selector: 'restart-snack',
-  standalone: true,
-  imports: [
-    MatButton,
-    MatSnackBarAction,
-    MatSnackBarActions,
-    MatSnackBarLabel,
-  ],
-  template: `
-<div class="flex">
-  <div matSnackBarLabel>
-    A new update has been downloaded. Please restart the app for it to take effect.
-  </div>
-  <div matSnackBarActions class="flex">
-    <button type="button" matSnackBarAction mat-button (click)="restart()">Restart</button>
-    <button type="button" matSnackBarAction mat-button (click)="dismiss()">Dismiss</button>
-  </div>
-</div>
-  `,
-})
-export class RestartSnackComponent {
-  private snackbarRef = inject(MatSnackBarRef);
-
-  async restart() {
-    await window.ipc?.invoke('quit-and-install');
-    this.snackbarRef.dismissWithAction();
-  }
-
-  dismiss() {
-    this.snackbarRef.dismissWithAction();
-  }
-}
+import { RestartSnackComponent } from './components/restart-snackbar.component';
 
 @Component({
   selector: 'app-root',
@@ -52,12 +19,12 @@ export class RestartSnackComponent {
   template: `
 <div class="flex w-full h-full">
   @if (hasAcceptedTermsOfService()) {
-    <div class="p-3 bg-violet-200 h-full flex flex-col gap-2">
+    <div class="p-3 bg-violet-100 h-full flex flex-col gap-2">
       <a mat-button routerLink='controls'>Controls</a>
       <a mat-button routerLink='settings'>Settings</a>
       <!-- <a mat-button routerLink='transcribe'>Transcribe</a> -->
     </div>
-    <div class="p-3 w-full h-full overflow-auto">
+    <div class="w-full h-full overflow-auto">
       <router-outlet />
     </div>
   } @else {
@@ -107,4 +74,3 @@ export class AppComponent implements OnInit {
     await window.ipc?.invoke('check-for-updates');
   }
 }
-
