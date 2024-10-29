@@ -58,3 +58,20 @@ npm run http:dev
 ```
 
 Then open browser to `http://localhost:4200`
+
+--------------------------------------------------------------------------------
+
+# todo
+
+- [ ] control form export
+  - that will spit out all relevant info to be given to auditors
+  - want users to be able to export detail for one control, or multiple at a time
+  - it will need to spit out the control form the user fills out as well as the control attributes
+  - the form should have our logo on it as well.
+  - pdf format would be nice
+
+- [x] update logo
+
+- [ ] add ability for company to use a secure model
+
+- [ ] update the local model to be the newest llama model

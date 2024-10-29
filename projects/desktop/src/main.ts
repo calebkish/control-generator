@@ -4,7 +4,7 @@ import net from 'node:net';
 import { app, BrowserWindow, ipcMain, utilityProcess } from 'electron/main';
 import electronUpdater from 'electron-updater';
 
-// #REGION electronUpdater.autoUpdater defaults
+//#region electronUpdater.autoUpdater defaults
 // autoDownload: true,
 // autoInstallOnAppQuit: true,
 // autoRunAppAfterInstall: true,
@@ -14,7 +14,7 @@ import electronUpdater from 'electron-updater';
 // disableWebInstaller: false,
 // disableDifferentialDownload: false,
 // forceDevUpdateConfig: false,
-// #ENDREGION
+//#endregion
 
 const isDevelopment = process.env['NODE_ENV'] === 'development';
 

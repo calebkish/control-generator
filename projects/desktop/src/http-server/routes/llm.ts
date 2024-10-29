@@ -5,7 +5,7 @@ import { Context, Hono } from 'hono';
 import { streamText } from 'hono/streaming';
 import { db } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { Chat, LlmConfigAzureOpenAiOption, LlmConfigLocalLlamaOption, chatsTable, llmConfigAzureOpenAiOptions, llmConfigsTable } from '../db/schema.js';
+import { Chat, LlmConfigAzureOpenAiOption, LlmConfigLocalLlamaOption, LlmConfigOption, chatsTable, llmConfigAzureOpenAiOptions, llmConfigsTable } from '../db/schema.js';
 import { ChatHistoryItem, ChatModelResponse, ChatUserMessage, Llama3ChatWrapper, LlamaChatSession, LlamaLogLevel, LlamaModel, getLlama } from 'node-llama-cpp';
 import fs from 'node:fs';
 import { Writable } from 'node:stream';
@@ -264,7 +264,7 @@ llmRouter.delete('/chat/:chatId/history',
 // add local llama config
 llmRouter.post('file/:option',
   async (c) => {
-    const option = c.req.param('option');
+    const option = c.req.param('option') as LlmConfigOption;
 
     const foundAvailableFile = localLlamaOptionTemplates.find(f => f.option === option);
 
@@ -356,11 +356,6 @@ const localLlamaOptionTemplates: { option: LlmConfigLocalLlamaOption, fileName: 
     fileName: 'Meta-Llama-3-8B-Instruct-Q8_0.gguf',
     downloadUrl: 'https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q8_0.gguf',
   },
-  // {
-  //   option: 'Qwen 2 1.5B Instract Q8 0',
-  //   fileName: 'qwen2-1.5b-instruct.Q8_0.gguf',
-  //   downloadUrl: 'https://huggingface.co/afrideva/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1.5b-instruct.Q8_0.gguf'
-  // },
 ];
 
 const azureOpenAiOptionTemplates: { option: LlmConfigAzureOpenAiOption }[] = [
@@ -395,7 +390,7 @@ llmRouter.get('models',
 
     return c.json(options);
   },
-)
+);
 
 // get user-created configs
 llmRouter.get('configs',
@@ -446,7 +441,7 @@ llmRouter.post('configs/:configId/activate',
 const addAzureOpenaiConfigValidator = z.object({
   apiKey: z.string(),
   endpoint: z.string().url(),
-  option: z.string(),
+  option: z.enum(llmConfigAzureOpenAiOptions),
 });
 llmRouter.post('configs/azure-openai',
   async (c) => {
@@ -458,10 +453,6 @@ llmRouter.post('configs/azure-openai',
     }
 
     const { option, apiKey, endpoint } = parsed.data;
-    if (!llmConfigAzureOpenAiOptions.includes(option as LlmConfigAzureOpenAiOption)) {
-      return c.json({ success: false }, 400);
-    }
-
     await db.insert(llmConfigsTable)
       .values({
         document: {

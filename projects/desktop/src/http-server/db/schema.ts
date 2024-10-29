@@ -115,13 +115,23 @@ export const controlsToChatsRelations = relations(controlsToChatsTable, ({ one }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const llmConfigLocalLlamaOptions = ['Llama 3 8B Instruct Q2 K', 'Llama 3 8B Instruct Q8 0', 'Qwen 2 1.5B Instract Q8 0'] as const;
+export const llmConfigLocalLlamaOptions = [
+  'Llama 3 8B Instruct Q2 K',
+  'Llama 3 8B Instruct Q8 0',
+] as const;
 export type LlmConfigLocalLlamaOption = typeof llmConfigLocalLlamaOptions[number];
-export const llmConfigAzureOpenAiOptions = ['Azure OpenAI ChatGPT 4'] as const;
+
+export const llmConfigAzureOpenAiOptions = [
+  'Azure OpenAI ChatGPT 4'
+] as const;
 export type LlmConfigAzureOpenAiOption = typeof llmConfigAzureOpenAiOptions[number];
+
 export type LlmConfigOption = LlmConfigLocalLlamaOption | LlmConfigAzureOpenAiOption;
 
-export const llmConfigTypes = ['LOCAL_LLAMA_V1', 'AZURE_OPENAI_V1'] as const;
+export const llmConfigTypes = [
+  'LOCAL_LLAMA_V1',
+  'AZURE_OPENAI_V1'
+] as const;
 export type LlmConfigType = typeof llmConfigTypes[number];
 
 export interface BaseLlmConfigSchema {
@@ -148,6 +158,7 @@ export const llmConfigsTable = sqliteTable('llm_configs',
       .$default(() => new Date())
       .notNull(),
     option: text('option')
+      .$type<LlmConfigOption>()
       .notNull(),
     isActive: integer('is_active', { mode: 'boolean' })
       .default(false)
