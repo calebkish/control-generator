@@ -18,13 +18,13 @@ import { HttpControlsService } from '../services/http-controls.service';
 import { ControlSchemaV1 } from '@http';
 import { Router, RouterLink } from '@angular/router';
 import { MatDivider } from '@angular/material/divider';
-import { validateFormForDescription } from './control-description-page.component';
 import { AsyncPipe, JsonPipe } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { TipsAndTricksSidenavComponent } from '../components/tips-and-track-sidenav.component';
-import { validateFormForAttributesRoadmap } from './attributes-roadmap-page.component';
-import { validateFormForAttributesAssist } from './attributes-page.component';
 import { environment } from '../../environment/environment';
+import { validateFormForAttributesRoadmap } from '../corpus/attributes-roadmap-assist';
+import { validateFormForAttributesAssist } from '../corpus/attributes-assist';
+import { validateFormForDescription } from '../corpus/description-assist';
 
 @Component({
   selector: 'app-control-form-page',
