@@ -7,6 +7,9 @@ import { apiRouter } from './routes/api.js';
 import { appPath, port } from './args.js';
 import { cors } from 'hono/cors';
 
+// There was an error "UNABLE_TO_GET_ISSUER_CERT_LOCALLY"
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+
 try {
   const migrationsFolder = path.join(appPath, 'drizzle');
 
