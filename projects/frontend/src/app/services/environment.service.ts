@@ -7,7 +7,7 @@ import { Observable, defer, from, shareReplay, switchMap } from 'rxjs';
 export class EnvironmentService {
   async getApiUrl() {
     const apiPort = await window.ipc?.invoke('get-api-port');
-    return apiPort ? `http://localhost:${apiPort}/api` : 'http://localhost:4200/api'
+    return apiPort ? `http://localhost:${apiPort}/api` : 'http://localhost:3000/api'
   }
 
   apiUrl$ = defer(() => {
