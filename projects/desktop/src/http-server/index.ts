@@ -1,10 +1,11 @@
+import path from 'node:path';
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { migrate } from 'drizzle-orm/libsql/migrator';
 import { db } from './db/index.js';
 import { apiRouter } from './routes/api.js';
 import { appPath, port } from './args.js';
-import path from 'node:path';
+import { cors } from 'hono/cors';
 
 try {
   const migrationsFolder = path.join(appPath, 'drizzle');
@@ -18,6 +19,8 @@ try {
 }
 
 const app = new Hono();
+
+app.use('*', cors({ origin: '*' }));
 
 app.route('/api', apiRouter);
 

@@ -25,7 +25,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
     <div class="p-6 bg-violet-50 h-full overflow-auto flex flex-col">
       <div class="font-bold text-lg text-violet-900">Tips and Tricks</div>
 
-      <ul class="list-disc list-outside p-3 flex flex-col gap-2 overflow-auto">
+      <ul class="list-disc list-outside p-4 pr-0 flex flex-col gap-2 overflow-auto">
         <ng-content select=[items] />
       </ul>
     </div>

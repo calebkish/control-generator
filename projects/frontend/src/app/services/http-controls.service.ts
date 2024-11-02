@@ -57,4 +57,11 @@ export class HttpControlsService {
     return this.env.withApiUrl$(url => this.http.delete<void>(`${url}/chat/${chatId}/history`));
   }
 
+  exportControlToPdf(controlId: number, path: string) {
+    return this.env.withApiUrl$(url => this.http.post<void>(
+      `${url}/controls/${controlId}/export`,
+      { path }
+    ));
+  }
+
 }

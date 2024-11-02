@@ -116,21 +116,22 @@ export const controlsToChatsRelations = relations(controlsToChatsTable, ({ one }
 ////////////////////////////////////////////////////////////////////////////////
 
 export const llmConfigLocalLlamaOptions = [
-  'Llama 3 8B Instruct Q2 K',
-  'Llama 3 8B Instruct Q8 0',
+  'Llama 3.2 1B Instruct Q6 K L',
+  'Llama 3.2 3B Instruct Q6 K L',
 ] as const;
 export type LlmConfigLocalLlamaOption = typeof llmConfigLocalLlamaOptions[number];
 
-export const llmConfigAzureOpenAiOptions = [
-  'Azure OpenAI ChatGPT 4'
+export const llmConfigOpenAiOptions = [
+  'Azure OpenAI',
+  'OpenAI',
 ] as const;
-export type LlmConfigAzureOpenAiOption = typeof llmConfigAzureOpenAiOptions[number];
+export type LlmConfigOpenAiOption = typeof llmConfigOpenAiOptions[number];
 
-export type LlmConfigOption = LlmConfigLocalLlamaOption | LlmConfigAzureOpenAiOption;
+export type LlmConfigOption = LlmConfigLocalLlamaOption | LlmConfigOpenAiOption;
 
 export const llmConfigTypes = [
   'LOCAL_LLAMA_V1',
-  'AZURE_OPENAI_V1'
+  'OPENAI_V1'
 ] as const;
 export type LlmConfigType = typeof llmConfigTypes[number];
 
@@ -140,9 +141,10 @@ export interface BaseLlmConfigSchema {
     type: Extract<LlmConfigType, 'LOCAL_LLAMA_V1'>;
     fileName: string;
   } | {
-    type: Extract<LlmConfigType, 'AZURE_OPENAI_V1'>;
+    type: Extract<LlmConfigType, 'OPENAI_V1'>;
     apiKey: string;
     endpoint: string;
+    model?: string;
   };
 };
 

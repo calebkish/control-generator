@@ -1,4 +1,4 @@
-import { Chat, ChatSchemaV1, Control, ControlsToChats, LlmConfigAzureOpenAiOption, LlmConfigLocalLlamaOption, LlmConfigOption, LlmConfigType } from '../db/schema.js';
+import { Chat, ChatSchemaV1, Control, ControlsToChats, LlmConfigOpenAiOption, LlmConfigLocalLlamaOption, LlmConfigOption, LlmConfigType } from '../db/schema.js';
 
 export {
   ControlSchemaV1,
@@ -30,12 +30,14 @@ export type LlmConfigOptionResponse = {
   option: LlmConfigLocalLlamaOption;
   type: 'LOCAL_LLAMA_V1';
 } | {
-  option: LlmConfigAzureOpenAiOption;
-  type: 'AZURE_OPENAI_V1';
+  option: LlmConfigOpenAiOption;
+  type: 'OPENAI_V1';
 };
 
 export type ConfigVm = {
   id: number;
   isActive: boolean;
   option: string;
+  type: LlmConfigType;
+  model?: string;
 };

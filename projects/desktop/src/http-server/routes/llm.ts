@@ -5,13 +5,15 @@ import { Context, Hono } from 'hono';
 import { streamText } from 'hono/streaming';
 import { db } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { Chat, LlmConfigAzureOpenAiOption, LlmConfigLocalLlamaOption, LlmConfigOption, chatsTable, llmConfigAzureOpenAiOptions, llmConfigsTable } from '../db/schema.js';
+import { Chat, LlmConfigOpenAiOption, LlmConfigLocalLlamaOption, LlmConfigOption, chatsTable, llmConfigOpenAiOptions as llmConfigOpenAiOptions, llmConfigsTable } from '../db/schema.js';
 import { ChatHistoryItem, ChatModelResponse, ChatUserMessage, Llama3ChatWrapper, LlamaChatSession, LlamaLogLevel, LlamaModel, getLlama } from 'node-llama-cpp';
 import fs from 'node:fs';
 import { Writable } from 'node:stream';
 import { BehaviorSubject, from, switchMap, throttleTime } from 'rxjs';
 import { ConfigVm, LlmConfigOptionResponse } from '../models/index.js';
-import { AzureKeyCredential, ChatRequestMessageUnion, OpenAIClient } from '@azure/openai';
+import { openAiStreamHandler } from '../util/open-ai-stream-handlers/open-ai-stream-handler.js';
+import { azureOpenAiStreamHandler } from '../util/open-ai-stream-handlers/azure-open-ai-stream-handler.js';
+import { fileExists } from '../util/file-exists.js';
 
 type LoadedModel = {
   modelPath: string;
@@ -101,70 +103,55 @@ llmRouter.post('/chat/:chatId/prompt',
     const { systemPrompt, userPrompt } = parsed.data;
     if (config.document.value.type === 'LOCAL_LLAMA_V1') {
       return handleLocalLlamaPromptStream(c, config.document.value.fileName, systemPrompt, userPrompt, chat);
-    } else if (config.document.value.type === 'AZURE_OPENAI_V1') {
-      const { apiKey, endpoint } = config.document.value;
-      return handleAzureOpenAiPromptStream(c, systemPrompt, userPrompt, chat, apiKey, endpoint, config.option as LlmConfigAzureOpenAiOption);
+    } else if (config.document.value.type === 'OPENAI_V1') {
+      const { apiKey, endpoint, model } = config.document.value;
+      if (!model) {
+        return c.json({
+          success: false,
+          msg: `Model not specified for the config "${config.option}"`
+        }, 500);
+      }
+      return handleOpenAiPromptStream(c, systemPrompt, userPrompt, chat, apiKey, endpoint, model, config.option);
     } else {
       return c.notFound();
     }
   },
 );
 
-async function handleAzureOpenAiPromptStream(
+/**
+ * @param model aka "deploymentId" for Azure Open AI
+ * @param configOption aka "vendor"
+ */
+async function handleOpenAiPromptStream(
   c: Context<any>,
   systemPrompt: string,
   userPrompt: string,
   chat: Chat,
   apiKey: string,
   endpoint: string,
-  option: LlmConfigAzureOpenAiOption
+  model: string,
+  configOption: LlmConfigOption
 ) {
-  const client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
 
-  const deploymentId = option === 'Azure OpenAI ChatGPT 4' ? 'gpt-4' : null;
-
-  if (deploymentId === null) {
-    return c.json({ success: false }, 500);
+  let events: AsyncGenerator<string, void, unknown> | null = null;
+  if (configOption === 'OpenAI') {
+    events = openAiStreamHandler(c, systemPrompt, userPrompt, endpoint, apiKey, chat, model);
+  } else if (configOption === 'Azure OpenAI') {
+    events = azureOpenAiStreamHandler(c, systemPrompt, userPrompt, endpoint, apiKey, chat, model);
   }
 
-  const history: ChatRequestMessageUnion[] = [
-    {
-      role: 'system',
-      content: systemPrompt,
-    },
-    ...chat.document.value.history.map(item => {
-      if (item.type === 'model') {
-        return {
-          role: 'assistant',
-          content: item.response.at(0)!,
-        };
-      } else {
-        return {
-          role: item.type,
-          content: item.text,
-        };
-      }
-    }),
-    {
-      role: 'user',
-      content: userPrompt,
-    },
-  ];
+  if (events === null) {
+    return c.json({ success: false, msg: `Unknown config option "${configOption}"` }, 500);
+  }
 
   return streamText(c, async (textStream) => {
     // Abort signals aren't captured if nothing is written to the stream for some reason...
     await textStream.write('');
 
-    const events = await client.streamChatCompletions(deploymentId, history, {
-      abortSignal: c.req.raw.signal,
-    });
     let aiAnswer = '';
     for await (const event of events) {
-      const responseChunk = event.choices.at(0)?.delta?.content;
-      if (responseChunk) {
-        aiAnswer += responseChunk;
-        await textStream.write(responseChunk);
-      }
+      aiAnswer += event;
+      await textStream.write(event);
     }
 
     if (c.req.raw.signal.aborted) {
@@ -261,7 +248,7 @@ llmRouter.delete('/chat/:chatId/history',
   },
 );
 
-// add local llama config
+// add local llama config (downloads model file)
 llmRouter.post('file/:option',
   async (c) => {
     const option = c.req.param('option') as LlmConfigOption;
@@ -299,32 +286,46 @@ llmRouter.post('file/:option',
     const progress$ = new BehaviorSubject<number>(0);
 
     return streamText(c, async (stream) => {
+      // Abort signals aren't captured if nothing is written to the stream for some reason...
       await stream.write('0');
-
-      stream.onAbort(() => {
-        console.log('on stream abort!');
-        subscription.unsubscribe();
-        fs.unlinkSync(path.join(userDataDir, foundAvailableFile.fileName));
-      });
 
       const subscription = progress$.pipe(
         throttleTime(500),
         switchMap((progress) => from(stream.write(progress.toString())))
       ).subscribe();
 
-      let bytesRead = 0;
-      await response.body!
-        .pipeThrough(new TransformStream({
-          transform: async (chunk, controller) => {
-            bytesRead += chunk.byteLength;
-            const progress = Math.round((bytesRead / contentLengthNum) * 100);
-            progress$.next(progress);
-            controller.enqueue(chunk);
-          },
-        }), { signal: c.req.raw.signal })
-        .pipeTo(writableStream, { signal: c.req.raw.signal });
+      try {
+        let bytesRead = 0;
+        await response.body!
+          .pipeThrough(
+            new TransformStream({
+              transform: async (chunk, controller) => {
+                bytesRead += chunk.byteLength;
+                const progress = Math.round((bytesRead / contentLengthNum) * 100);
+                progress$.next(progress);
+                controller.enqueue(chunk);
+              },
+            }),
+            { signal: c.req.raw.signal }
+          )
+          .pipeTo(
+            writableStream,
+            { signal: c.req.raw.signal }
+          );
+      } catch (error) {
+        const isAbortError = error instanceof DOMException && error.name === 'AbortError';
+        if (!isAbortError) {
+          console.error('There was an error when streaming file download progress:', error);
+        }
+        if (await fileExists(modelFilePath)) {
+          await fs.promises.unlink(modelFilePath);
+        }
+        await stream.close();
+        return;
+      } finally {
+        subscription.unsubscribe();
+      }
 
-      subscription.unsubscribe();
       await db.insert(llmConfigsTable)
         .values({
           option: foundAvailableFile.option,
@@ -338,8 +339,6 @@ llmRouter.post('file/:option',
         });
       await stream.write('100');
       await stream.close();
-    }, async (error, stream) => {
-      console.error('STREAM ERROR:', error);
     });
   },
 );
@@ -347,20 +346,23 @@ llmRouter.post('file/:option',
 
 const localLlamaOptionTemplates: { option: LlmConfigLocalLlamaOption, fileName: string, downloadUrl: string }[] = [
   {
-    option: 'Llama 3 8B Instruct Q2 K',
-    fileName: 'Meta-Llama-3-8B-Instruct-Q2_K.gguf',
-    downloadUrl: 'https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q2_K.gguf',
+    option: 'Llama 3.2 1B Instruct Q6 K L',
+    fileName: 'Llama-3.2-1B-Instruct-Q6_K_L.gguf',
+    downloadUrl: 'https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q6_K_L.gguf',
   },
   {
-    option: 'Llama 3 8B Instruct Q8 0',
-    fileName: 'Meta-Llama-3-8B-Instruct-Q8_0.gguf',
-    downloadUrl: 'https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q8_0.gguf',
+    option: 'Llama 3.2 3B Instruct Q6 K L',
+    fileName: 'Llama-3.2-3B-Instruct-Q6_K_L.gguf',
+    downloadUrl: 'https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q6_K_L.gguf',
   },
 ];
 
-const azureOpenAiOptionTemplates: { option: LlmConfigAzureOpenAiOption }[] = [
+const openAiOptionTemplates: { option: LlmConfigOpenAiOption }[] = [
   {
-    option: 'Azure OpenAI ChatGPT 4',
+    option: 'Azure OpenAI',
+  },
+  {
+    option: 'OpenAI',
   },
 ];
 
@@ -379,14 +381,14 @@ llmRouter.get('models',
         };
       });
 
-    const azureOpenAiOptions: LlmConfigOptionResponse[] = azureOpenAiOptionTemplates.map(template => {
+    const openAiOptions: LlmConfigOptionResponse[] = openAiOptionTemplates.map(template => {
       return {
         option: template.option,
-        type: 'AZURE_OPENAI_V1',
+        type: 'OPENAI_V1',
       };
     });
 
-    const options = fileOptions.concat(azureOpenAiOptions);
+    const options = fileOptions.concat(openAiOptions);
 
     return c.json(options);
   },
@@ -398,11 +400,18 @@ llmRouter.get('configs',
     const configs = await db.query.llmConfigsTable.findMany();
 
     const configsVm: ConfigVm[] = configs.map(c => {
-      return {
+      const configVm: ConfigVm = {
         id: c.id,
         isActive: c.isActive,
         option: c.option, // @TODO make this a name-able thing
+        type: c.document.value.type,
       };
+
+      if (c.document.value.type === 'OPENAI_V1') {
+        configVm.model = c.document.value.model;
+      }
+
+      return configVm;
     })
 
     return c.json(configsVm);
@@ -437,35 +446,75 @@ llmRouter.post('configs/:configId/activate',
 );
 
 
-// add azure openai config
-const addAzureOpenaiConfigValidator = z.object({
+// add openai config
+const addOpenaiConfigValidator = z.object({
   apiKey: z.string(),
   endpoint: z.string().url(),
-  option: z.enum(llmConfigAzureOpenAiOptions),
+  option: z.enum(llmConfigOpenAiOptions),
+  model: z.string().optional(),
 });
-llmRouter.post('configs/azure-openai',
+llmRouter.post('configs/openai',
   async (c) => {
     const unparsed = await c.req.json();
 
-    const parsed = await addAzureOpenaiConfigValidator.spa(unparsed);
+    const parsed = await addOpenaiConfigValidator.spa(unparsed);
     if (!parsed.success) {
       return c.json(parsed.error.flatten(), 400);
     }
 
-    const { option, apiKey, endpoint } = parsed.data;
+    const { option, apiKey, endpoint, model } = parsed.data;
     await db.insert(llmConfigsTable)
       .values({
         document: {
           schemaVersion: 1,
           value: {
-            type: 'AZURE_OPENAI_V1',
+            type: 'OPENAI_V1',
             apiKey,
             endpoint,
+            model,
           }
         },
         isActive: false,
         option,
       });
+
+    return c.json({ success: true });
+  },
+);
+
+// set the model on an openai config
+const setModelOnOpenaiConfigValidator = z.object({
+  option: z.enum(llmConfigOpenAiOptions),
+  model: z.string(),
+});
+llmRouter.post('configs/openai/model',
+  async (c) => {
+    const unparsed = await c.req.json();
+
+    const parsed = await setModelOnOpenaiConfigValidator.spa(unparsed);
+    if (!parsed.success) {
+      return c.json(parsed.error.flatten(), 400);
+    }
+
+    const { option, model } = parsed.data;
+    const config = await db.query.llmConfigsTable.findFirst({
+      where: eq(llmConfigsTable.option, option)
+    });
+    if (!config) {
+      return c.notFound();
+    }
+    if (config.document.value.type !== 'OPENAI_V1') {
+      return c.json({ success: false }, 400);
+    }
+
+    // mutate
+    config.document.value.model = model;
+
+    await db.update(llmConfigsTable)
+      .set({
+        document: config.document,
+      })
+      .where(eq(llmConfigsTable.option, option));
 
     return c.json({ success: true });
   },
@@ -489,8 +538,8 @@ llmRouter.delete('configs/:configId',
 
     if (llmConfig.document.value.type == 'LOCAL_LLAMA_V1') {
       const modelPath = path.join(userDataDir, llmConfig.document.value.fileName);
-      if (fs.statSync(modelPath, { throwIfNoEntry: false })) {
-        fs.unlinkSync(path.join(userDataDir, llmConfig.document.value.fileName));
+      if (await fileExists(modelPath)) {
+        await fs.promises.unlink(modelPath);
       }
     }
 

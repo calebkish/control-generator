@@ -19,6 +19,7 @@ const config = {
   files: [
     "tsc-out/**/*",
     "drizzle/**/*",
+    "pdf-resources/**/*",
     "src/preload.js",
 
     // === Included by default (for more info: https://www.electron.build/configuration#files) ===

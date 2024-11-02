@@ -28,6 +28,11 @@ html {
   --mdc-icon-button-state-layer-size: 48px;
 }
 
+// To prevent this warning from showing: "Could not find Angular Material core theme. Most Material components may not work as expected."
+.mat-theme-loaded-marker {
+  display: none;
+}
+
 html, body {
   height: 100%;
 }

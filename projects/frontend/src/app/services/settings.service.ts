@@ -83,12 +83,19 @@ export class SettingsService {
     return this.env.withApiUrl$(url => this.http.delete<void>(`${url}/configs/${configId}`));
   }
 
-  addAzureOpenaiConfig(body: {
+  addOpenaiConfig(body: {
     apiKey: string,
     endpoint: string,
     option: string,
   }) {
-    return this.env.withApiUrl$(url => this.http.post(`${url}/configs/azure-openai`, body));
+    return this.env.withApiUrl$(url => this.http.post(`${url}/configs/openai`, body));
+  }
+
+  updateOpenaiConfigModel(body: {
+    option: string,
+    model: string,
+  }) {
+    return this.env.withApiUrl$(url => this.http.post(`${url}/configs/openai/model`, body));
   }
 
   refetchUser$ = new Subject<void>();

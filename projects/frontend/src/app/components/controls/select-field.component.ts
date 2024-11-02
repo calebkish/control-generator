@@ -3,7 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { getFormControlError } from '../../util/control-error';
 import { MatSelectModule } from '@angular/material/select';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 
 export type SelectOption<T> = {
@@ -24,7 +24,7 @@ export type SelectOption<T> = {
   @if (label()) {
     <mat-label>{{ label() }}</mat-label>
   }
-  <mat-select [formControl]="ctrl()" [disabled]="disabled()">
+  <mat-select [formControl]="ctrl()">
     @for (option of options(); track option.value) {
       <mat-option [value]="option.value">{{ option.label }}</mat-option>
     }
@@ -50,8 +50,24 @@ export class SelectFieldComponent<T> {
 
   error$ = this.ctrl$.pipe(
     switchMap(ctrl => ctrl.events.pipe(
-      map(() => getFormControlError(ctrl)),
+      map(() => {
+        const error = getFormControlError(ctrl);
+        return error;
+      }),
     )),
   );
   error = toSignal(this.error$);
+
+  constructor() {
+    toObservable(this.disabled).pipe(
+      takeUntilDestroyed()
+    ).subscribe(disabled => {
+      const ctrl = this.ctrl();
+      if (disabled && !ctrl.disabled) {
+        ctrl.disable();
+      } else if (!disabled && !ctrl.enabled) {
+        ctrl.enable();
+      }
+    });
+  }
 }

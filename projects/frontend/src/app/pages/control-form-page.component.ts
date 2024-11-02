@@ -24,6 +24,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { TipsAndTricksSidenavComponent } from '../components/tips-and-track-sidenav.component';
 import { validateFormForAttributesRoadmap } from './attributes-roadmap-page.component';
 import { validateFormForAttributesAssist } from './attributes-page.component';
+import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-control-form-page',
@@ -220,7 +221,7 @@ export class ControlFormPageComponent {
     ).subscribe(async () => {
       if (!this.form.valid) {
         const formError = this.form.errors?.['formError'];
-        const message = `Form is invalid: ${formError}` ?? 'Form is invalid';
+        const message = formError ? `Form is invalid: ${formError}` : 'Form is invalid';
         this.snackbar.open(message, 'Dismiss', { duration: 5000, verticalPosition: 'top', panelClass: 'snackbar-error' });
         return;
       }
@@ -276,5 +277,24 @@ export class ControlFormPageComponent {
     this.isSaving.set(true);
     await firstValueFrom(this.controlsService.patchControlForm(this.controlId(), patch));
     this.isSaving.set(false);
+  }
+
+  async exportToPdf() {
+    const control = this.controlFormValue();
+
+    if (!control?.name) {
+      this.snackbar.open('Please enter a name for the control', 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+      return;
+    }
+
+    const fileName = control.name.toLowerCase().replace(/\s+/g, '-') + '.pdf';
+
+    const folderPath = await window.ipc?.invoke('select-folder', fileName, 'Export control to PDF', [
+      { name: 'PDF', extensions: ['pdf'] },
+    ]);
+    if (!folderPath) {
+      return;
+    }
+    await firstValueFrom(this.controlsService.exportControlToPdf(this.controlId(), folderPath));
   }
 }

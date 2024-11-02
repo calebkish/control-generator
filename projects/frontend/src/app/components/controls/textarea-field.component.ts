@@ -1,9 +1,9 @@
-import { Component, input, viewChild } from '@angular/core';
+import { Component, effect, input, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule, SubscriptSizing } from '@angular/material/form-field';
 import { getFormControlError } from '../../util/control-error';
 import { MatInput, MatInputModule } from '@angular/material/input';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 
@@ -20,7 +20,6 @@ import { CdkTextareaAutosize } from '@angular/cdk/text-field';
       matInput
       cdkTextareaAutosize
       [formControl]="ctrl()"
-      [disabled]="disabled()"
       [placeholder]="placeholder"
     ></textarea>
   } @else {
@@ -28,7 +27,6 @@ import { CdkTextareaAutosize } from '@angular/cdk/text-field';
       matInput
       cdkTextareaAutosize
       [formControl]="ctrl()"
-      [disabled]="disabled()"
     ></textarea>
   }
   @if (hint()) {
@@ -64,6 +62,19 @@ export class TextAreaFieldComponent {
     )),
   );
   error = toSignal(this.error$);
+
+  constructor() {
+    toObservable(this.disabled).pipe(
+      takeUntilDestroyed()
+    ).subscribe(disabled => {
+      const ctrl = this.ctrl();
+      if (disabled && !ctrl.disabled) {
+        ctrl.disable();
+      } else if (!disabled && !ctrl.enabled) {
+        ctrl.enable();
+      }
+    });
+  }
 
   focus() {
     this.matInput().focus();

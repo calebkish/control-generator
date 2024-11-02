@@ -8,7 +8,7 @@
     "build": "ng build --configuration electron",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "cp": "ng build --configuration electron && cp -r dist/control-generator/browser/ ../desktop/tsc-out"
+    "cp": "ng build --configuration electron && shx rm -r ../desktop/tsc-out/browser/ && shx cp -r dist/control-generator/browser/ ../desktop/tsc-out"
   },
   "private": true,
   "dependencies": {
@@ -40,6 +40,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.4.38",
+    "shx": "^0.3.4",
     "tailwindcss": "^3.4.1",
     "typescript": "~5.4.2"
   }

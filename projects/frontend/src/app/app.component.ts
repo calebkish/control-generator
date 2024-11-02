@@ -70,7 +70,6 @@ export class AppComponent implements OnInit {
       this.snackbar.open('A new update is available! Please keep the application open while it\'s downloaded.', 'Dismiss', { duration: 10000 });
     });
 
-
     await window.ipc?.invoke('check-for-updates');
   }
 }

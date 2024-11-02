@@ -1,8 +1,11 @@
 import path from 'node:path';
 import net from 'node:net';
+
 // `electron/main` has type definitions for things that are safe to import into the main process.
-import { app, BrowserWindow, ipcMain, utilityProcess } from 'electron/main';
+import { app, BrowserWindow, ipcMain, utilityProcess, dialog, SaveDialogOptions } from 'electron/main';
+
 import electronUpdater from 'electron-updater';
+import { isDevelopment } from './env.js';
 
 //#region electronUpdater.autoUpdater defaults
 // autoDownload: true,
@@ -16,10 +19,11 @@ import electronUpdater from 'electron-updater';
 // forceDevUpdateConfig: false,
 //#endregion
 
-const isDevelopment = process.env['NODE_ENV'] === 'development';
-
 app.whenReady().then(async () => {
+  // C:\Users\windowsmain\AppData\Local\Programs\control-generator\resources\app.asar
   console.log('App path:', app.getAppPath());
+
+  // C:\Users\windowsmain\AppData\Roaming\control-generator
   console.log('User data data:', app.getPath('userData'));
 
   const apiPort = isDevelopment ? 3000 : await getPortFree();
@@ -122,7 +126,7 @@ function createWindow() {
   }
 }
 
-function setupIpcHandlersAndListeners(apiPort: number) {
+function setupIpcHandlersAndListeners(apiPort: number): void {
   ipcMain.handle('get-api-port', async () => {
     return apiPort;
   });
@@ -144,6 +148,22 @@ function setupIpcHandlersAndListeners(apiPort: number) {
     return null;
   });
 
+  ipcMain.handle('select-folder', async (
+    event,
+    filePath: SaveDialogOptions['defaultPath'],
+    title: SaveDialogOptions['title'],
+    filters: SaveDialogOptions['filters'],
+  ) => {
+    const value = await dialog.showSaveDialog({
+      title,
+      defaultPath: filePath,
+      filters,
+    });
+    if (value.canceled) {
+      return null;
+    }
+    return value.filePath;
+  });
 }
 
 

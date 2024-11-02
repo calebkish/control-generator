@@ -3,7 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { getFormControlError } from '../../util/control-error';
 import { MatInputModule } from '@angular/material/input';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 
@@ -24,7 +24,6 @@ import { AsyncPipe } from '@angular/common';
     matInput
     type="number"
     [formControl]="ctrl()"
-    [disabled]="disabled()"
   />
   @if (hint()) {
     <mat-hint>{{ hint() }}</mat-hint>
@@ -52,6 +51,19 @@ export class NumberFieldComponent {
     )),
   );
   protected error = toSignal(this.error$);
+
+  constructor() {
+    toObservable(this.disabled).pipe(
+      takeUntilDestroyed()
+    ).subscribe(disabled => {
+      const ctrl = this.ctrl();
+      if (disabled && !ctrl.disabled) {
+        ctrl.disable();
+      } else if (!disabled && !ctrl.enabled) {
+        ctrl.enable();
+      }
+    });
+  }
 
   focus() {
     this.numInput().nativeElement.focus();
