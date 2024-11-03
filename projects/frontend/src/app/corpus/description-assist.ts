@@ -115,15 +115,11 @@ export function getDescriptionAssistSystemPrompt(f: ControlSchemaV1['value']['fo
 
 ${glossary}
 
+${f.type === 'itdm' && !!f.ipc ? ipcGeneralInfo : ''}
+
+${!!f.judgement ? judgementGeneralInfo : ''}
+
 ${descriptionAssistTask}`;
-
-if (f.type === 'itdm' && !!f.ipc) {
-  descriptionAssistSystemPrompt += `\n\n${ipcGeneralInfo}`;
-}
-
-if (!!f.judgement) {
-  descriptionAssistSystemPrompt += `\n\n${judgementGeneralInfo}`;
-}
 
   return {
     success: true,
