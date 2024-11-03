@@ -35,9 +35,9 @@
       <div class="flex-1 flex flex-col h-full">
         <div class="flex">
           @if (shouldAllowReadWriteSystemPrompt) {
-            <button type="button" mat-button (click)="editSystemPrompt$.next()" class="w-full" [disabled]="state.buffer()">
-              <mat-icon>edit</mat-icon>
-              Edit system prompt
+            <button type="button" mat-button (click)="state.viewSystemPrompt()" class="w-full" [disabled]="state.buffer()">
+              <mat-icon>visibility</mat-icon>
+              View system prompt
             </button>
           }
           <button type="button" mat-button (click)="state.clearHistory()" class="w-full button-error" [disabled]="state.buffer()">

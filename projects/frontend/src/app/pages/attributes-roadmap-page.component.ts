@@ -10,7 +10,7 @@ import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, 
 import { signalSlice } from 'ngxtension/signal-slice';
 import { ConfigVm, ControlChatResponse, ControlSchemaV1, LlmConfigOptionResponse } from '@http';
 import { TextAreaFieldComponent } from '../components/controls/textarea-field.component';
-import { SystemPromptDialogComponent } from '../components/system-prompt-dialog.component';
+import { SystemPromptDialogComponent, SystemPromptDialogData } from '../components/system-prompt-dialog.component';
 import { TextStreamService } from '../services/text-stream.service';
 import { HttpControlsService } from '../services/http-controls.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -103,12 +103,6 @@ export class AttributesRoadmapPageComponent {
           afterNextRender(() => {
             this.scrollToBottom();
           }, { injector:  this.injector, phase: AfterRenderPhase.Read });
-
-          let systemPrompt = localStorage.getItem(this.lsSystemPromptKey);
-          if (!systemPrompt) {
-            systemPrompt = attributesRoadmapAssistSystemPrompt;
-            localStorage.setItem(this.lsSystemPromptKey, systemPrompt);
-          }
         }),
         map((res) => ({ ...state(), chat: res })),
       ),
@@ -123,11 +117,7 @@ export class AttributesRoadmapPageComponent {
             return EMPTY;
           }
 
-          let systemPrompt = localStorage.getItem(this.lsSystemPromptKey);
-          if (!systemPrompt) {
-            systemPrompt = attributesRoadmapAssistSystemPrompt;
-            localStorage.setItem(this.lsSystemPromptKey, systemPrompt);
-          }
+          const systemPrompt = attributesRoadmapAssistSystemPrompt;
 
           const activeConfig = state().activeConfig;
 
@@ -214,6 +204,22 @@ export class AttributesRoadmapPageComponent {
           );
         }),
       ),
+      viewSystemPrompt: (state, $: Observable<void>) => $.pipe(
+        switchMap(() => {
+          const systemPrompt = attributesRoadmapAssistSystemPrompt;
+          return this.dialog.open<SystemPromptDialogComponent, SystemPromptDialogData>(SystemPromptDialogComponent, {
+            width: '60rem',
+            maxWidth: '100%',
+            minHeight: '30rem',
+            data: {
+              systemPrompt,
+              mode: 'readonly',
+            } satisfies SystemPromptDialogData,
+          }).afterClosed().pipe(
+            map(() => ({}))
+          );
+        }),
+      ),
     },
     selectors: (state) => ({
       history: () => state.chat()?.history ?? [],
@@ -226,10 +232,7 @@ export class AttributesRoadmapPageComponent {
   });
 
   onSubmit$ = new Subject<void>();
-  editSystemPrompt$ = new Subject<void>();
   cancel$ = new Subject<void>();
-
-  private readonly lsSystemPromptKey = 'chat-system-prompt#attributesRoadmap';
 
   async ngOnInit() {
     this.state.onInit();
@@ -240,27 +243,6 @@ export class AttributesRoadmapPageComponent {
     ).subscribe(() => {
       this.formDirty.set(true);
     });
-
-    // Handle editing system prompt.
-    this.editSystemPrompt$
-      .pipe(
-        switchMap(() => {
-          return this.dialog.open(SystemPromptDialogComponent, {
-            width: '60rem',
-            maxWidth: '100%',
-            minHeight: '30rem',
-            data: {
-              systemPrompt: localStorage.getItem(this.lsSystemPromptKey),
-            },
-          }).afterClosed();
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((result) => {
-        if (typeof result === 'string') {
-          localStorage.setItem(this.lsSystemPromptKey, result);
-        }
-      });
 
     // Handle save.
     this.onSubmit$.pipe(

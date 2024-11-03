@@ -10,7 +10,7 @@ import { EMPTY, Observable, Subject, concat, concatWith, defer, firstValueFrom, 
 import { signalSlice } from 'ngxtension/signal-slice';
 import { ConfigVm, ControlChatResponse, ControlSchemaV1 } from '@http';
 import { TextAreaFieldComponent } from '../components/controls/textarea-field.component';
-import { SystemPromptDialogComponent } from '../components/system-prompt-dialog.component';
+import { SystemPromptDialogComponent, SystemPromptDialogData } from '../components/system-prompt-dialog.component';
 import { TextStreamService } from '../services/text-stream.service';
 import { HttpControlsService } from '../services/http-controls.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -19,7 +19,7 @@ import { glossary } from '../corpus/glossary';
 import { SettingsService } from '../services/settings.service';
 import { environment } from '../../environment/environment';
 import { TipsAndTricksSidenavComponent } from '../components/tips-and-track-sidenav.component';
-import { descriptionAssistSystemPrompt, getDescriptionAssistUserPrompt } from '../corpus/description-assist';
+import { getDescriptionAssistSystemPrompt, getDescriptionAssistUserPrompt } from '../corpus/description-assist';
 
 @Component({
   selector: 'app-control-description-page',
@@ -104,12 +104,6 @@ export class ControlDescriptionPageComponent {
           afterNextRender(() => {
             this.scrollToBottom();
           }, { injector:  this.injector, phase: AfterRenderPhase.Read });
-
-          let systemPrompt = localStorage.getItem(this.lsSystemPromptKey);
-          if (!systemPrompt) {
-            systemPrompt = descriptionAssistSystemPrompt;
-            localStorage.setItem(this.lsSystemPromptKey, systemPrompt);
-          }
         }),
         map((res) => ({ ...state(), chat: res })),
       ),
@@ -134,11 +128,7 @@ export class ControlDescriptionPageComponent {
             return EMPTY;
           }
 
-          let systemPrompt = localStorage.getItem(this.lsSystemPromptKey);
-          if (!systemPrompt) {
-            systemPrompt = descriptionAssistSystemPrompt;
-            localStorage.setItem(this.lsSystemPromptKey, systemPrompt);
-          }
+          const systemPrompt = getDescriptionAssistSystemPrompt(chat.controlForm);
 
           const activeConfig = state().activeConfig;
 
@@ -225,6 +215,32 @@ export class ControlDescriptionPageComponent {
           );
         }),
       ),
+      viewSystemPrompt: (state, $: Observable<void>) => $.pipe(
+        switchMap(() => {
+          const form = state().chat?.controlForm;
+          if (!form) {
+            return EMPTY;
+          }
+
+          const systemPrompt = getDescriptionAssistSystemPrompt(form);
+          if (!systemPrompt.success) {
+            this.snackbar.open(systemPrompt.message, 'Dismiss', { duration: 10000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+            return EMPTY;
+          }
+
+          return this.dialog.open<SystemPromptDialogComponent, SystemPromptDialogData>(SystemPromptDialogComponent, {
+            width: '60rem',
+            maxWidth: '100%',
+            minHeight: '30rem',
+            data: {
+              systemPrompt: systemPrompt.message,
+              mode: 'readonly',
+            } satisfies SystemPromptDialogData,
+          }).afterClosed().pipe(
+            map(() => ({}))
+          );
+        }),
+      ),
     },
     selectors: (state) => ({
       history: () => state.chat()?.history ?? [],
@@ -237,10 +253,7 @@ export class ControlDescriptionPageComponent {
   });
 
   onSubmit$ = new Subject<void>();
-  editSystemPrompt$ = new Subject<void>();
   cancel$ = new Subject<void>();
-
-  private readonly lsSystemPromptKey = 'chat-system-prompt#description';
 
   async ngOnInit() {
     this.state.onInit();
@@ -251,27 +264,6 @@ export class ControlDescriptionPageComponent {
     ).subscribe(() => {
       this.formDirty.set(true);
     });
-
-    // Handle editing system prompt.
-    this.editSystemPrompt$
-      .pipe(
-        switchMap(() => {
-          return this.dialog.open(SystemPromptDialogComponent, {
-            width: '60rem',
-            maxWidth: '100%',
-            minHeight: '30rem',
-            data: {
-              systemPrompt: localStorage.getItem(this.lsSystemPromptKey),
-            },
-          }).afterClosed();
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((result) => {
-        if (typeof result === 'string') {
-          localStorage.setItem(this.lsSystemPromptKey, result);
-        }
-      });
 
     // Handle description save.
     this.onSubmit$.pipe(
