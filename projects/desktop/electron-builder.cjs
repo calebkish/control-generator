@@ -10,10 +10,13 @@ const ghToken = process.env['GH_TOKEN'];
 
 // https://github.com/electron-userland/electron-builder/blob/master/packages/app-builder-lib/src/configuration.ts
 const config = {
-  appId: 'com.control-generator.electron',
+  appId: 'com.sox-ai.electron',
 
   // The name of the executable
-  productName: 'Control Generator',
+  productName: 'SOX AI',
+
+  // https://www.electron.build/configuration#artifactname
+  artifactName: 'sox-ai.${ext}',
 
   // on build, specify the files that should be bundled into the `app.asar`
   files: [
