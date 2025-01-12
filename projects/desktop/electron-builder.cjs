@@ -3,12 +3,17 @@ const dotenv = require('dotenv');
 const readDotenv = process.env['READ_DOTENV'];
 
 if (readDotenv) {
+  console.log('=== Reading .env ===');
   dotenv.config();
 }
 
 const ghToken = process.env['GH_TOKEN'];
 
-// https://github.com/electron-userland/electron-builder/blob/master/packages/app-builder-lib/src/configuration.ts
+/**
+* @type {import('electron-builder').Configuration}
+* @see https://www.electron.build/configuration
+* @see https://github.com/electron-userland/electron-builder/blob/master/packages/app-builder-lib/src/configuration.ts
+*/
 const config = {
   appId: 'com.sox-ai.electron',
 
@@ -23,7 +28,6 @@ const config = {
     "tsc-out/**/*",
     "drizzle/**/*",
     "pdf-resources/**/*",
-    "src/preload.js",
 
     // === Included by default (for more info: https://www.electron.build/configuration#files) ===
     // "package.json"
@@ -65,11 +69,6 @@ const config = {
   win: {
     target: ['nsis'],
     icon: 'build/icon.ico',
-  },
-
-  // https://www.electron.build/linux
-  linux: {
-    target: ['AppImage'],
   },
 };
 

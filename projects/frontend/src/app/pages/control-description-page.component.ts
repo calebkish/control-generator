@@ -130,6 +130,11 @@ export class ControlDescriptionPageComponent {
 
           const systemPrompt = getDescriptionAssistSystemPrompt(chat.controlForm);
 
+          if (systemPrompt.success === false) {
+            this.snackbar.open(systemPrompt.message, 'Dismiss', { duration: 3000, verticalPosition: 'top', panelClass: 'snackbar-error' });
+            return EMPTY;
+          }
+
           const activeConfig = state().activeConfig;
 
           if (!activeConfig) {
@@ -154,7 +159,7 @@ export class ControlDescriptionPageComponent {
             ),
             this.textStreamService.requestTextStream$(
               `/chat/${chat.chatId}/prompt`,
-              { userPrompt: userPrompt.message, systemPrompt, configId: activeConfig.id }
+              { userPrompt: userPrompt.message, systemPrompt: systemPrompt.message, configId: activeConfig.id }
             ).pipe(
               scan((acc, textChunk) => acc + textChunk, ''),
               map((modelResponse) => {

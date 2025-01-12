@@ -131,8 +131,7 @@ async function handleOpenAiPromptStream(
   endpoint: string,
   model: string,
   configOption: LlmConfigOption
-) {
-
+): Promise<Response> {
   let events: AsyncGenerator<string, void, unknown> | null = null;
   if (configOption === 'OpenAI') {
     events = openAiStreamHandler(c, systemPrompt, userPrompt, endpoint, apiKey, chat, model);
@@ -144,14 +143,14 @@ async function handleOpenAiPromptStream(
     return c.json({ success: false, msg: `Unknown config option "${configOption}"` }, 500);
   }
 
-  return streamText(c, async (textStream) => {
+  return streamText(c, async (stream) => {
     // Abort signals aren't captured if nothing is written to the stream for some reason...
-    await textStream.write('');
+    await stream.write('');
 
     let aiAnswer = '';
     for await (const event of events) {
       aiAnswer += event;
-      await textStream.write(event);
+      await stream.write(event);
     }
 
     if (c.req.raw.signal.aborted) {
@@ -160,6 +159,10 @@ async function handleOpenAiPromptStream(
     }
 
     await addToHistory(chat, userPrompt, aiAnswer);
+    await stream.close();
+  }, async (e, stream) => {
+    await stream.writeln(`Error: ${(e as Error)?.message}`);
+    await stream.close();
   });
 }
 

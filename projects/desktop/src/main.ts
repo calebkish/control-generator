@@ -78,7 +78,7 @@ function createWindow() {
     width: 1500,
     height: 1000,
     webPreferences: {
-      preload: path.join(app.getAppPath(), 'src', 'preload.js'),
+      preload: path.join(app.getAppPath(), 'tsc-out', 'preload.cjs'),
     },
     show: false,
   });

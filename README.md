@@ -17,35 +17,20 @@ cd control-generator
 
 1. `cd projects/frontend && npm run start`
 1. `cd projects/desktop && npm run http:dev`
-1. `cd projects/desktop && npm run start:watch`
+1. `cd projects/desktop && npm run start`
 
 ### Building
 
 ```sh
 cd projects/desktop
-npm run tsc
-cd ../frontend
-npm run cp
-cd ../desktop
-
-# To only build, not publish.
-npm run dist:windows
+./scripts/build.sh
 ```
 
 ### Publishing
 
 ```sh
 cd projects/desktop
-npm run tsc
-cd ../frontend
-npm run cp
-cd ../desktop
-
-# Update package.json version
-npm version '0.0.6'
-
-# For publishing GitHub release locally
-npm run publish:dev:windows
+./scripts/publish-local.sh '0.0.30'
 ```
 
 --------------------------------------------------------------------------------
